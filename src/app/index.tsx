@@ -1,98 +1,374 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import {
+  ActivityIndicator,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Platform,
+} from "react-native";
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+import { router } from "expo-router";
+
+import { useAuth } from "../context/AuthContext";
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
+import { useEffect } from "react";
+
+WebBrowser.maybeCompleteAuthSession();
+import { Brand } from "../constants/brand";
 
 export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
+  const { user, loading, loginWithGoogle, logout } = useAuth();
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    redirectUri: Platform.OS === "web" ? process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_URI : undefined,
+  });
+  useEffect(() => { if (response?.type === "success" && response.params.id_token) loginWithGoogle(response.params.id_token); }, [response]);
+
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" />
+
+        <Text style={styles.loadingText}>Getting things ready...</Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
       <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
+        <View style={styles.loginContainer}>
+          <Text style={styles.brand}>BREAKROOM</Text>
+          <Text style={styles.loginTitle}>A better workday break.</Text>
+          <Text style={styles.loginText}>Sign in with your Google account to join your workplace community.</Text>
+          <TouchableOpacity disabled={!request} onPress={() => promptAsync()} style={styles.loginGoogleButton}>
+            <Text style={styles.loginGoogleText}>Continue with Google</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
-    </ThemedView>
+    );
+  }
+
+  function handleGettingBored() {
+    router.push("/bored");
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.brand}>BREAKROOM</Text>
+            <Text style={styles.greeting}>Good to see you,</Text>
+            <Text style={styles.username}>{user.anonymousUsername}</Text>
+          </View>
+
+          <View style={styles.accountActions}>
+            <View style={styles.profileBadge}>
+              <Text style={styles.profileInitial}>
+                {user.anonymousUsername.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+            <TouchableOpacity onPress={logout} style={styles.logoutButton}>
+              <Text style={styles.logoutText}>Sign out</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.statusRow}>
+          <View style={styles.statusDot} />
+          <Text style={styles.statusText}>AVAILABLE FOR A BREAK</Text>
+        </View>
+
+        <View style={styles.heroCard}>
+          <View style={styles.cardAccent} />
+          <Text style={styles.eyebrow}>YOUR WORKDAY, RECHARGED</Text>
+          <Text style={styles.title}>
+            Take a thoughtful{`\n`}break from the busy.
+          </Text>
+          <Text style={styles.subtitle}>
+            Meet another professional for a quick, anonymous conversation away
+            from the inbox.
+          </Text>
+
+          <TouchableOpacity
+            style={styles.primaryButton}
+            activeOpacity={0.88}
+            onPress={handleGettingBored}
+          >
+            <Text style={styles.primaryButtonText}>Find a break partner</Text>
+            <Text style={styles.buttonArrow}>→</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={styles.infoRow}
+          activeOpacity={0.85}
+          onPress={() => router.push("/office-pulse")}
+        >
+          <View style={styles.infoIcon}>
+            <Text style={styles.infoIconText}>15</Text>
+          </View>
+          <View style={styles.infoCopy}>
+            <Text style={styles.infoTitle}>Office Pulse</Text>
+            <Text style={styles.infoText}>
+              Share what you’re working on, applaud colleagues, and add a
+              thoughtful note.
+            </Text>
+          </View>
+          <Text style={styles.infoArrow}>→</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.footerText}>
+          Your conversations are anonymous and private.
+        </Text>
+        <TouchableOpacity style={styles.briefCard} onPress={() => router.push("/break-briefs")}>
+          <Text style={styles.briefEyebrow}>BREAK BRIEFS</Text>
+          <Text style={styles.briefTitle}>Watch or share a 10-second workday moment →</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
   safeArea: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    backgroundColor: "#F4F6F8",
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
+
+  container: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    backgroundColor: "#F4F6F8",
   },
+
+  scrollContent: {
+    paddingHorizontal: 22,
+    paddingTop: 28,
+    paddingBottom: 32,
+  },
+
+  loading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F4F6F8",
+  },
+
+  loadingText: {
+    marginTop: 12,
+    color: "#777",
+    fontSize: 15,
+  },
+
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  brand: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.6,
+    color: "#167C80",
+    marginBottom: 16,
+  },
+
+  greeting: {
+    fontSize: 15,
+    color: "#667085",
+  },
+
+  username: {
+    fontSize: 25,
+    fontWeight: "800",
+    color: "#172B4D",
+    marginTop: 2,
+  },
+
+  profileBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: "#D9EEED",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  accountActions: { alignItems: "flex-end", gap: 7 },
+  logoutButton: { paddingHorizontal: 5, paddingVertical: 2 },
+  logoutText: { color: Brand.colors.muted, fontSize: 12, fontWeight: "700" },
+
+  profileInitial: {
+    color: "#16676B",
+    fontSize: 19,
+    fontWeight: "800",
+  },
+
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    marginTop: 34,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: "#E5F3EC",
+  },
+
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: "#289B66",
+    marginRight: 7,
+  },
+
+  statusText: {
+    color: "#267250",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.7,
+  },
+
+  heroCard: {
+    backgroundColor: "#172B4D",
+    borderRadius: 24,
+    marginTop: 14,
+    paddingHorizontal: 24,
+    paddingTop: 30,
+    paddingBottom: 23,
+    overflow: "hidden",
+  },
+
+  cardAccent: {
+    position: "absolute",
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    backgroundColor: "#23647A",
+    opacity: 0.48,
+    top: -96,
+    right: -62,
+  },
+
+  eyebrow: {
+    color: "#73D2CC",
+    fontSize: 10,
+    letterSpacing: 1.2,
+    fontWeight: "800",
+  },
+
   title: {
-    textAlign: 'center',
+    fontSize: 31,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    lineHeight: 38,
+    marginTop: 13,
   },
-  code: {
-    textTransform: 'uppercase',
+
+  subtitle: {
+    fontSize: 15,
+    color: "#C7D2E4",
+    marginTop: 13,
+    lineHeight: 22,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+
+  primaryButton: {
+    marginTop: 26,
+    minHeight: 54,
+    paddingHorizontal: 18,
+    borderRadius: 14,
+    backgroundColor: "#75D0C9",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexDirection: "row",
   },
+
+  primaryButtonText: {
+    color: "#123343",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+
+  buttonArrow: {
+    color: "#123343",
+    fontSize: 25,
+    fontWeight: "800",
+  },
+
+  infoRow: {
+    flexDirection: "row",
+    padding: 18,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    marginTop: 18,
+    borderWidth: 1,
+    borderColor: "#E6EAF0",
+  },
+
+  infoIcon: {
+    width: 43,
+    height: 43,
+    borderRadius: 13,
+    backgroundColor: "#EEF3F7",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 13,
+  },
+
+  infoIconText: {
+    color: "#344B6B",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+
+  infoCopy: {
+    flex: 1,
+  },
+
+  infoArrow: {
+    color: Brand.colors.teal,
+    fontSize: 21,
+    fontWeight: "800",
+    alignSelf: "center",
+  },
+
+  infoTitle: {
+    color: "#1D2D44",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+
+  infoText: {
+    color: "#667085",
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 4,
+  },
+
+  footerText: {
+    color: "#7A8596",
+    textAlign: "center",
+    fontSize: 12,
+    marginTop: 22,
+  },
+  briefCard: { marginTop: 16, padding: 18, backgroundColor: Brand.colors.navy, borderRadius: Brand.radius.control },
+  briefEyebrow: { color: Brand.colors.mint, fontSize: 10, fontWeight: "800", letterSpacing: 1.1 },
+  briefTitle: { color: "#FFF", fontSize: 15, fontWeight: "800", marginTop: 7 },
+  loginContainer: { flex: 1, justifyContent: "center", paddingHorizontal: 28, backgroundColor: Brand.colors.canvas },
+  loginTitle: { color: Brand.colors.navy, fontSize: 34, lineHeight: 41, fontWeight: "800", marginTop: 20 },
+  loginText: { color: Brand.colors.muted, fontSize: 16, lineHeight: 24, marginTop: 14 },
+  loginGoogleButton: { marginTop: 32, minHeight: 56, alignItems: "center", justifyContent: "center", borderRadius: Brand.radius.control, backgroundColor: Brand.colors.navy },
+  loginGoogleText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
 });

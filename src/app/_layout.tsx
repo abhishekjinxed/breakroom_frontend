@@ -1,18 +1,52 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { Stack, usePathname } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import { View } from "react-native";
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { connectSocket, disconnectSocket } from "../services/socket";
 
-SplashScreen.preventAutoHideAsync();
+import { AuthProvider, useAuth } from "../context/AuthContext";
+import { AppBottomNav } from "../components/AppBottomNav";
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
+  );
+}
+
+function RootNavigator() {
+  const { token } = useAuth();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!token) {
+      disconnectSocket();
+      return;
+    }
+
+    console.log("🔌 Connecting Socket.IO...");
+
+    connectSocket(token);
+
+    return () => {
+      // Don't disconnect here if your
+      // AuthContext remains mounted during
+      // navigation.
+    };
+  }, [token]);
+
+  const hideNavigation = pathname.startsWith("/chat/") || pathname.startsWith("/auth/") || pathname === "/bored";
+
+  return (
+    <View style={{ flex: 1 }}>
+      <StatusBar style="dark" />
+
+      <View style={{ flex: 1 }}>
+        <Stack screenOptions={{ headerShown: false }} />
+      </View>
+      {!!token && !hideNavigation && <AppBottomNav />}
+    </View>
   );
 }
