@@ -1,6 +1,7 @@
 
 import {
   ActivityIndicator,
+  Alert,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -17,7 +18,8 @@ import { useLanguage } from "../context/LanguageContext";
 import * as Google from "expo-auth-session/providers/google";
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
-import { useEffect } from "react";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { useEffect, useState } from "react";
 
 WebBrowser.maybeCompleteAuthSession();
 import { Brand } from "../constants/brand";
@@ -25,20 +27,6 @@ import { Brand } from "../constants/brand";
 export default function HomeScreen() {
   const { user, loading, loginWithGoogle, logout } = useAuth();
   const { t } = useLanguage();
-  const redirectUri = Platform.OS === "web"
-    ? AuthSession.makeRedirectUri({ path: "auth/google/callback" })
-    : AuthSession.makeRedirectUri({ native: "breakroom://auth/google/callback" });
-  // EAS environment variables are compiled into the Android bundle. Keep the
-  // launch screen available if the native Google client ID has not been added
-  // to an environment yet; Google sign-in will then use the web client until
-  // the Android OAuth credential is configured.
-  const androidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-    androidClientId,
-    redirectUri,
-  });
-  useEffect(() => { if (response?.type === "success" && response.params.id_token) loginWithGoogle(response.params.id_token); }, [response]);
 
   if (loading) {
     return (
@@ -57,9 +45,7 @@ export default function HomeScreen() {
           <Text style={styles.brand}>BREAKROOM</Text>
           <Text style={styles.loginTitle}>{t("loginTitle")}</Text>
           <Text style={styles.loginText}>{t("loginText")}</Text>
-          <TouchableOpacity disabled={!request} onPress={() => promptAsync()} style={styles.loginGoogleButton}>
-            <Text style={styles.loginGoogleText}>{t("continueGoogle")}</Text>
-          </TouchableOpacity>
+          <GoogleLoginButton />
         </View>
       </SafeAreaView>
     );
@@ -137,6 +123,56 @@ export default function HomeScreen() {
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function GoogleLoginButton() {
+  const { loginWithGoogle } = useAuth();
+  const { t } = useLanguage();
+
+  if (Platform.OS === "web") {
+    return <WebGoogleLoginButton label={t("continueGoogle")} loginWithGoogle={loginWithGoogle} />;
+  }
+
+  return <NativeGoogleLoginButton label={t("continueGoogle")} loginWithGoogle={loginWithGoogle} />;
+}
+
+function WebGoogleLoginButton({ label, loginWithGoogle }: { label: string; loginWithGoogle: (idToken: string) => Promise<void> }) {
+  const redirectUri = AuthSession.makeRedirectUri({ path: "auth/google/callback" });
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    redirectUri,
+  });
+
+  useEffect(() => {
+    if (response?.type === "success" && response.params.id_token) {
+      loginWithGoogle(response.params.id_token).catch(() => Alert.alert("Sign-in failed", "Please try again."));
+    }
+  }, [response, loginWithGoogle]);
+
+  return <TouchableOpacity disabled={!request} onPress={() => promptAsync()} style={styles.loginGoogleButton}><Text style={styles.loginGoogleText}>{label}</Text></TouchableOpacity>;
+}
+
+function NativeGoogleLoginButton({ label, loginWithGoogle }: { label: string; loginWithGoogle: (idToken: string) => Promise<void> }) {
+  const [signingIn, setSigningIn] = useState(false);
+
+  useEffect(() => {
+    GoogleSignin.configure({ webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID });
+  }, []);
+
+  async function signIn() {
+    try {
+      setSigningIn(true);
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      const result = await GoogleSignin.signIn();
+      if (result.type === "success" && result.data.idToken) await loginWithGoogle(result.data.idToken);
+    } catch {
+      Alert.alert("Sign-in failed", "Google could not complete sign-in. Please try again.");
+    } finally {
+      setSigningIn(false);
+    }
+  }
+
+  return <TouchableOpacity disabled={signingIn} onPress={signIn} style={styles.loginGoogleButton}><Text style={styles.loginGoogleText}>{signingIn ? "Signing in..." : label}</Text></TouchableOpacity>;
 }
 
 const styles = StyleSheet.create({
