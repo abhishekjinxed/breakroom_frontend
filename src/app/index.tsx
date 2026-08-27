@@ -164,9 +164,20 @@ function NativeGoogleLoginButton({ label, loginWithGoogle }: { label: string; lo
       setSigningIn(true);
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
       const result = await GoogleSignin.signIn();
-      if (result.type === "success" && result.data.idToken) await loginWithGoogle(result.data.idToken);
-    } catch {
-      Alert.alert("Sign-in failed", "Google could not complete sign-in. Please try again.");
+      if (result.type === "cancelled") return;
+      if (!result.data.idToken) throw new Error("Google did not return an ID token. Check the Web OAuth client ID.");
+      await loginWithGoogle(result.data.idToken);
+    } catch (error: any) {
+      const nativeCode = error?.code;
+      const apiStatus = error?.response?.status;
+      console.error("Native Google sign-in failed", { nativeCode, apiStatus, message: error?.message });
+      if (nativeCode === "DEVELOPER_ERROR" || nativeCode === "10") {
+        Alert.alert("Google Android setup needed", "The Android OAuth client must use package com.boredapp.breakroom and the SHA-1 from the installed build. The Web client ID must remain in the app configuration.");
+      } else if (apiStatus === 401 || apiStatus === 403) {
+        Alert.alert("Sign-in was rejected", "Google completed sign-in, but the server rejected the token. Ensure Railway GOOGLE_WEB_CLIENT_ID matches the app’s Web OAuth client ID.");
+      } else {
+        Alert.alert("Sign-in failed", error?.message || "Google could not complete sign-in. Please try again.");
+      }
     } finally {
       setSigningIn(false);
     }
