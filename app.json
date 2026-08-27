@@ -4,7 +4,7 @@
     "slug": "breakroom",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/breakroom-playstore-icon.png",
     "scheme": "breakroom",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -14,10 +14,8 @@
       "package": "com.boredapp.breakroom",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#172B4D",
+        "foregroundImage": "./assets/images/breakroom-playstore-icon.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -40,6 +38,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f8657845-0b0a-4ac7-b091-74f96117bee8"
+      }
+    },
+    "owner": "rickc137"
   }
 }
