@@ -25,7 +25,9 @@ import { Brand } from "../constants/brand";
 export default function HomeScreen() {
   const { user, loading, loginWithGoogle, logout } = useAuth();
   const { t } = useLanguage();
-  const webRedirectUri = Platform.OS === "web" ? AuthSession.makeRedirectUri({ path: "auth/google/callback" }) : undefined;
+  const redirectUri = Platform.OS === "web"
+    ? AuthSession.makeRedirectUri({ path: "auth/google/callback" })
+    : AuthSession.makeRedirectUri({ native: "breakroom://auth/google/callback" });
   // EAS environment variables are compiled into the Android bundle. Keep the
   // launch screen available if the native Google client ID has not been added
   // to an environment yet; Google sign-in will then use the web client until
@@ -34,7 +36,7 @@ export default function HomeScreen() {
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
     androidClientId,
-    redirectUri: webRedirectUri,
+    redirectUri,
   });
   useEffect(() => { if (response?.type === "success" && response.params.id_token) loginWithGoogle(response.params.id_token); }, [response]);
 
