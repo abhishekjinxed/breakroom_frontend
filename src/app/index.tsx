@@ -23,28 +23,30 @@ import { useEffect, useState } from "react";
 
 WebBrowser.maybeCompleteAuthSession();
 import { Brand } from "../constants/brand";
+import { useTheme } from "../context/ThemeContext";
 
 export default function HomeScreen() {
   const { user, loading, loginWithGoogle, logout } = useAuth();
   const { t } = useLanguage();
+  const { colors } = useTheme();
 
   if (loading) {
     return (
-      <View style={styles.loading}>
+      <View style={[styles.loading, { backgroundColor: colors.canvas }]}>
         <ActivityIndicator size="large" />
 
-        <Text style={styles.loadingText}>{t("loading")}</Text>
+        <Text style={[styles.loadingText, { color: colors.muted }]}>{t("loading")}</Text>
       </View>
     );
   }
 
   if (!user) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.loginContainer}>
-          <Text style={styles.brand}>BREAKROOM</Text>
-          <Text style={styles.loginTitle}>{t("loginTitle")}</Text>
-          <Text style={styles.loginText}>{t("loginText")}</Text>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.canvas }]}>
+        <View style={[styles.loginContainer, { backgroundColor: colors.canvas }]}>
+          <Text style={[styles.brand, { color: colors.teal }]}>BREAKROOM</Text>
+          <Text style={[styles.loginTitle, { color: colors.navy }]}>{t("loginTitle")}</Text>
+          <Text style={[styles.loginText, { color: colors.muted }]}>{t("loginText")}</Text>
           <GoogleLoginButton />
         </View>
       </SafeAreaView>
@@ -56,68 +58,68 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.canvas }]}>
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.canvas }]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <View>
-            <Text style={styles.brand}>BREAKROOM</Text>
-            <Text style={styles.greeting}>{t("greeting")}</Text>
-            <Text style={styles.username}>{user.anonymousUsername}</Text>
+            <Text style={[styles.brand, { color: colors.teal }]}>BREAKROOM</Text>
+            <Text style={[styles.greeting, { color: colors.muted }]}>{t("greeting")}</Text>
+            <Text style={[styles.username, { color: colors.navy }]}>{user.anonymousUsername}</Text>
           </View>
 
           <View style={styles.accountActions}>
-            <View style={styles.profileBadge}>
-              <Text style={styles.profileInitial}>
+            <View style={[styles.profileBadge, { backgroundColor: colors.tealSoft }]}>
+              <Text style={[styles.profileInitial, { color: colors.teal }]}>
                 {user.anonymousUsername.charAt(0).toUpperCase()}
               </Text>
             </View>
-            <View style={styles.accountLinks}><TouchableOpacity onPress={() => router.push("/account")}><Text style={styles.logoutText}>{t("account")}</Text></TouchableOpacity><TouchableOpacity onPress={logout}><Text style={styles.logoutText}>{t("signOut")}</Text></TouchableOpacity></View>
+            <View style={styles.accountLinks}><TouchableOpacity onPress={() => router.push("/account")}><Text style={[styles.logoutText, { color: colors.muted }]}>{t("account")}</Text></TouchableOpacity><TouchableOpacity onPress={logout}><Text style={[styles.logoutText, { color: colors.muted }]}>{t("signOut")}</Text></TouchableOpacity></View>
           </View>
         </View>
 
-        <View style={styles.statusRow}>
-          <View style={styles.statusDot} />
-          <Text style={styles.statusText}>{t("available")}</Text>
+        <View style={[styles.statusRow, { backgroundColor: colors.greenSoft }]}>
+          <View style={[styles.statusDot, { backgroundColor: colors.green }]} />
+          <Text style={[styles.statusText, { color: colors.green }]}>{t("available")}</Text>
         </View>
 
-        <View style={styles.heroCard}>
-          <View style={styles.cardAccent} />
-          <Text style={styles.eyebrow}>{t("heroEyebrow")}</Text>
+        <View style={[styles.heroCard, { backgroundColor: colors.hero }]}>
+          <View style={[styles.cardAccent, { backgroundColor: colors.heroAccent }]} />
+          <Text style={[styles.eyebrow, { color: colors.mint }]}>{t("heroEyebrow")}</Text>
           <Text style={styles.title}>{t("heroTitle")}</Text>
           <Text style={styles.subtitle}>{t("heroText")}</Text>
 
           <TouchableOpacity
-            style={styles.primaryButton}
+            style={[styles.primaryButton, { backgroundColor: colors.mint }]}
             activeOpacity={0.88}
             onPress={handleGettingBored}
           >
-            <Text style={styles.primaryButtonText}>{t("findPartner")}</Text>
-            <Text style={styles.buttonArrow}>→</Text>
+            <Text style={[styles.primaryButtonText, { color: colors.onAccent }]}>{t("findPartner")}</Text>
+            <Text style={[styles.buttonArrow, { color: colors.onAccent }]}>→</Text>
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity
-          style={styles.infoRow}
+          style={[styles.infoRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
           activeOpacity={0.85}
           onPress={() => router.push("/office-pulse")}
         >
-          <View style={styles.infoIcon}>
-            <Text style={styles.infoIconText}>15</Text>
+          <View style={[styles.infoIcon, { backgroundColor: colors.surfaceSoft }]}>
+            <Text style={[styles.infoIconText, { color: colors.navyMuted }]}>15</Text>
           </View>
           <View style={styles.infoCopy}>
-            <Text style={styles.infoTitle}>{t("officePulse")}</Text>
-            <Text style={styles.infoText}>{t("officePulseText")}</Text>
+            <Text style={[styles.infoTitle, { color: colors.text }]}>{t("officePulse")}</Text>
+            <Text style={[styles.infoText, { color: colors.muted }]}>{t("officePulseText")}</Text>
           </View>
-          <Text style={styles.infoArrow}>→</Text>
+          <Text style={[styles.infoArrow, { color: colors.teal }]}>→</Text>
         </TouchableOpacity>
 
-        <Text style={styles.footerText}>{t("communitySafety")}</Text>
-        <TouchableOpacity style={styles.briefCard} onPress={() => router.push("/break-briefs")}>
-          <Text style={styles.briefEyebrow}>{t("breakBriefs")}</Text>
+        <Text style={[styles.footerText, { color: colors.muted }]}>{t("communitySafety")}</Text>
+        <TouchableOpacity style={[styles.briefCard, { backgroundColor: colors.surfaceSoft, borderColor: colors.border }]} onPress={() => router.push("/break-briefs")}>
+          <Text style={[styles.briefEyebrow, { color: colors.teal }]}>{t("breakBriefs")}</Text>
           <Text style={styles.briefTitle}>{t("breakBriefsText")}</Text>
         </TouchableOpacity>
       </ScrollView>

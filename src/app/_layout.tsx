@@ -7,22 +7,20 @@ import { connectSocket, disconnectSocket } from "../services/socket";
 
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { LanguageProvider } from "../context/LanguageContext";
+import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import { AppBottomNav } from "../components/AppBottomNav";
 import { TermsGate } from "../components/TermsGate";
 
 export default function RootLayout() {
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <RootNavigator />
-      </AuthProvider>
-    </LanguageProvider>
+    <ThemeProvider><LanguageProvider><AuthProvider><RootNavigator /></AuthProvider></LanguageProvider></ThemeProvider>
   );
 }
 
 function RootNavigator() {
   const { token, user } = useAuth();
   const pathname = usePathname();
+  const { isDark } = useTheme();
 
   useEffect(() => {
     if (!token) {
@@ -45,7 +43,7 @@ function RootNavigator() {
 
   return (
     <View style={{ flex: 1 }}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? "light" : "dark"} />
 
       <View style={{ flex: 1 }}>
         <Stack screenOptions={{ headerShown: false }} />

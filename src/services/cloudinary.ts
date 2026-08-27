@@ -8,14 +8,6 @@ export async function pickAndUploadMedia(maxVideoDuration = 60, videoOnly = fals
   const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: videoOnly ? ["videos"] : imageOnly ? ["images"] : ["images", "videos"], quality: 0.8, videoMaxDuration: maxVideoDuration });
   if (result.canceled) return null;
   const asset = result.assets[0];
-  if (
-    asset.type === "video" &&
-    maxVideoDuration === 10 &&
-    typeof asset.duration === "number" &&
-    asset.duration > 10_000
-  ) {
-    throw new Error("Break Brief videos must be 10 seconds or shorter.");
-  }
   const file = await fetch(asset.uri).then((response) => response.blob());
   const body = new FormData();
   body.append("file", file, asset.fileName ?? `work-pulse.${asset.type === "video" ? "mp4" : "jpg"}`);
@@ -29,5 +21,10 @@ export async function pickAndUploadMedia(maxVideoDuration = 60, videoOnly = fals
     request.onerror = () => reject(new Error("Media upload failed."));
     request.send(body);
   });
-  return { mediaUrl: data.secure_url as string, mediaType: asset.type === "video" ? "VIDEO" as const : "IMAGE" as const };
+  const originalUrl = data.secure_url as string;
+  // Cloudinary serves the first ten seconds only, even when a longer source was selected.
+  const mediaUrl = asset.type === "video" && maxVideoDuration === 10
+    ? originalUrl.replace("/video/upload/", "/video/upload/so_0,eo_10/")
+    : originalUrl;
+  return { mediaUrl, mediaType: asset.type === "video" ? "VIDEO" as const : "IMAGE" as const };
 }

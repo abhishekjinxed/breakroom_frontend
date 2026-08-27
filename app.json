@@ -7,6 +7,8 @@
     "icon": "./assets/images/breakroom-playstore-icon.png",
     "scheme": "breakroom",
     "userInterfaceStyle": "automatic",
+    "backgroundColor": "#0D1720",
+    "primaryColor": "#147A78",
     "ios": {
       "icon": "./assets/expo.icon"
     },
@@ -21,10 +23,18 @@
     },
     "web": {
       "output": "static",
+      "themeColor": "#17324D",
+      "backgroundColor": "#0D1720",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Breakroom to use your location only when you choose to attach your city or area to an Office Pulse."
+        }
+      ],
       [
         "expo-splash-screen",
         {
