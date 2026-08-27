@@ -7,6 +7,7 @@ import { connectSocket, disconnectSocket } from "../services/socket";
 
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { AppBottomNav } from "../components/AppBottomNav";
+import { TermsGate } from "../components/TermsGate";
 
 export default function RootLayout() {
   return (
@@ -17,7 +18,7 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -47,6 +48,7 @@ function RootNavigator() {
         <Stack screenOptions={{ headerShown: false }} />
       </View>
       {!!token && !hideNavigation && <AppBottomNav />}
+      {!!user && !user.termsAcceptedAt && <TermsGate />}
     </View>
   );
 }

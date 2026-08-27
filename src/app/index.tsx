@@ -80,9 +80,7 @@ export default function HomeScreen() {
                 {user.anonymousUsername.charAt(0).toUpperCase()}
               </Text>
             </View>
-            <TouchableOpacity onPress={logout} style={styles.logoutButton}>
-              <Text style={styles.logoutText}>Sign out</Text>
-            </TouchableOpacity>
+            <View style={styles.accountLinks}><TouchableOpacity onPress={() => router.push("/account")}><Text style={styles.logoutText}>Account</Text></TouchableOpacity><TouchableOpacity onPress={logout}><Text style={styles.logoutText}>Sign out</Text></TouchableOpacity></View>
           </View>
         </View>
 
@@ -130,9 +128,7 @@ export default function HomeScreen() {
           <Text style={styles.infoArrow}>→</Text>
         </TouchableOpacity>
 
-        <Text style={styles.footerText}>
-          Your conversations are anonymous and private.
-        </Text>
+        <Text style={styles.footerText}>Google-verified workplace membership. Community content can be reported and reviewed.</Text>
         <TouchableOpacity style={styles.briefCard} onPress={() => router.push("/break-briefs")}>
           <Text style={styles.briefEyebrow}>BREAK BRIEFS</Text>
           <Text style={styles.briefTitle}>Watch or share a 10-second workday moment →</Text>
@@ -208,6 +204,7 @@ const styles = StyleSheet.create({
   },
 
   accountActions: { alignItems: "flex-end", gap: 7 },
+  accountLinks: { flexDirection: "row", gap: 9 },
   logoutButton: { paddingHorizontal: 5, paddingVertical: 2 },
   logoutText: { color: Brand.colors.muted, fontSize: 12, fontWeight: "700" },
 

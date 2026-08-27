@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { anonymousLogin, getMe, googleLogin, User } from "../api/auth";
 
 import { getToken, removeToken, saveToken } from "../utils/storage";
+import { acceptTerms as acceptTermsRequest } from "../api/safety";
 
 interface AuthContextType {
   user: User | null;
@@ -11,6 +12,7 @@ interface AuthContextType {
   login: () => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
+  acceptTerms: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,6 +50,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(result.user);
   }
 
+  async function acceptTerms() {
+    if (!token) return;
+    const updatedUser = await acceptTermsRequest(token);
+    setUser(updatedUser);
+  }
+
   useEffect(() => {
     async function initialize() {
       try {
@@ -81,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         loginWithGoogle,
         logout,
+        acceptTerms,
       }}
     >
       {children}

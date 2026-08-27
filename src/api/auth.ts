@@ -6,6 +6,7 @@ export interface User {
   status: string;
   createdAt: string;
   lastActiveAt?: string;
+  termsAcceptedAt?: string | null;
 }
 
 export async function anonymousLogin() {
