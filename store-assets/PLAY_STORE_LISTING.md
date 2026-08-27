@@ -27,10 +27,10 @@ Breakroom is designed for constructive, respectful workplace interaction. Member
 
 ## Store contact details — replace before submission
 
-- Contact email: `YOUR_SUPPORT_EMAIL`
-- Support website: `https://YOUR_FRONTEND_DOMAIN`
-- Privacy-policy URL: `https://YOUR_FRONTEND_DOMAIN/privacy`
-- Terms URL: `https://YOUR_FRONTEND_DOMAIN/terms`
+- Contact email: `abhishekjinxed@gmail.com`
+- Support website: `https://breakroomfrontend-production.up.railway.app/`
+- Privacy-policy URL: `https://breakroomfrontend-production.up.railway.app/privacy`
+- Terms URL: `https://breakroomfrontend-production.up.railway.app/terms`
 
 ## Screenshots
 
