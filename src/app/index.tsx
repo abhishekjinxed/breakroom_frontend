@@ -14,6 +14,7 @@ import { router } from "expo-router";
 
 import { useAuth } from "../context/AuthContext";
 import * as Google from "expo-auth-session/providers/google";
+import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect } from "react";
 
@@ -22,10 +23,11 @@ import { Brand } from "../constants/brand";
 
 export default function HomeScreen() {
   const { user, loading, loginWithGoogle, logout } = useAuth();
+  const webRedirectUri = Platform.OS === "web" ? AuthSession.makeRedirectUri({ path: "auth/google/callback" }) : undefined;
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    redirectUri: Platform.OS === "web" ? process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_URI : undefined,
+    redirectUri: webRedirectUri,
   });
   useEffect(() => { if (response?.type === "success" && response.params.id_token) loginWithGoogle(response.params.id_token); }, [response]);
 
