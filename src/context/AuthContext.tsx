@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-import { anonymousLogin, getMe, googleLogin, User } from "../api/auth";
+import { anonymousLogin, getMe, googleLogin, updateMyProfile as updateMyProfileRequest, User } from "../api/auth";
 
 import { getToken, removeToken, saveToken } from "../utils/storage";
 import { acceptTerms as acceptTermsRequest } from "../api/safety";
@@ -13,6 +13,7 @@ interface AuthContextType {
   loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   acceptTerms: () => Promise<void>;
+  updateProfile: (profile: Pick<User, "bio" | "dateOfBirth" | "gender" | "socialLink">) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,6 +57,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(updatedUser);
   }
 
+  async function updateProfile(profile: Pick<User, "bio" | "dateOfBirth" | "gender" | "socialLink">) {
+    if (!token) return;
+    const updatedUser = await updateMyProfileRequest(token, profile);
+    setUser(updatedUser);
+  }
+
   useEffect(() => {
     async function initialize() {
       try {
@@ -90,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loginWithGoogle,
         logout,
         acceptTerms,
+        updateProfile,
       }}
     >
       {children}

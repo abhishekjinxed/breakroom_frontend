@@ -3,9 +3,9 @@ import * as ImagePicker from "expo-image-picker";
 const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const uploadPreset = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-export async function pickAndUploadMedia(maxVideoDuration = 60, videoOnly = false, onProgress?: (value: number) => void) {
+export async function pickAndUploadMedia(maxVideoDuration = 60, videoOnly = false, onProgress?: (value: number) => void, imageOnly = false) {
   if (!cloudName || !uploadPreset) throw new Error("Cloudinary is not configured.");
-  const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: videoOnly ? ["videos"] : ["images", "videos"], quality: 0.8, videoMaxDuration: maxVideoDuration });
+  const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: videoOnly ? ["videos"] : imageOnly ? ["images"] : ["images", "videos"], quality: 0.8, videoMaxDuration: maxVideoDuration });
   if (result.canceled) return null;
   const asset = result.assets[0];
   if (
