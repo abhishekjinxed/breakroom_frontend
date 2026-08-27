@@ -33,7 +33,16 @@
           "imageWidth": 76
         }
       ],
-      "expo-video"
+      "expo-video",
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "android": ["en", "hi", "es"],
+            "ios": ["en", "hi", "es"]
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

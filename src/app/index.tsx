@@ -13,6 +13,7 @@ import {
 import { router } from "expo-router";
 
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 import * as Google from "expo-auth-session/providers/google";
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
@@ -23,6 +24,7 @@ import { Brand } from "../constants/brand";
 
 export default function HomeScreen() {
   const { user, loading, loginWithGoogle, logout } = useAuth();
+  const { t } = useLanguage();
   const webRedirectUri = Platform.OS === "web" ? AuthSession.makeRedirectUri({ path: "auth/google/callback" }) : undefined;
   // EAS environment variables are compiled into the Android bundle. Keep the
   // launch screen available if the native Google client ID has not been added
@@ -41,7 +43,7 @@ export default function HomeScreen() {
       <View style={styles.loading}>
         <ActivityIndicator size="large" />
 
-        <Text style={styles.loadingText}>Getting things ready...</Text>
+        <Text style={styles.loadingText}>{t("loading")}</Text>
       </View>
     );
   }
@@ -51,10 +53,10 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loginContainer}>
           <Text style={styles.brand}>BREAKROOM</Text>
-          <Text style={styles.loginTitle}>A better workday break.</Text>
-          <Text style={styles.loginText}>Sign in with your Google account to join your workplace community.</Text>
+          <Text style={styles.loginTitle}>{t("loginTitle")}</Text>
+          <Text style={styles.loginText}>{t("loginText")}</Text>
           <TouchableOpacity disabled={!request} onPress={() => promptAsync()} style={styles.loginGoogleButton}>
-            <Text style={styles.loginGoogleText}>Continue with Google</Text>
+            <Text style={styles.loginGoogleText}>{t("continueGoogle")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -75,7 +77,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.brand}>BREAKROOM</Text>
-            <Text style={styles.greeting}>Good to see you,</Text>
+            <Text style={styles.greeting}>{t("greeting")}</Text>
             <Text style={styles.username}>{user.anonymousUsername}</Text>
           </View>
 
@@ -85,32 +87,27 @@ export default function HomeScreen() {
                 {user.anonymousUsername.charAt(0).toUpperCase()}
               </Text>
             </View>
-            <View style={styles.accountLinks}><TouchableOpacity onPress={() => router.push("/account")}><Text style={styles.logoutText}>Account</Text></TouchableOpacity><TouchableOpacity onPress={logout}><Text style={styles.logoutText}>Sign out</Text></TouchableOpacity></View>
+            <View style={styles.accountLinks}><TouchableOpacity onPress={() => router.push("/account")}><Text style={styles.logoutText}>{t("account")}</Text></TouchableOpacity><TouchableOpacity onPress={logout}><Text style={styles.logoutText}>{t("signOut")}</Text></TouchableOpacity></View>
           </View>
         </View>
 
         <View style={styles.statusRow}>
           <View style={styles.statusDot} />
-          <Text style={styles.statusText}>AVAILABLE FOR A BREAK</Text>
+          <Text style={styles.statusText}>{t("available")}</Text>
         </View>
 
         <View style={styles.heroCard}>
           <View style={styles.cardAccent} />
-          <Text style={styles.eyebrow}>YOUR WORKDAY, RECHARGED</Text>
-          <Text style={styles.title}>
-            Take a thoughtful{`\n`}break from the busy.
-          </Text>
-          <Text style={styles.subtitle}>
-            Meet another professional for a quick, anonymous conversation away
-            from the inbox.
-          </Text>
+          <Text style={styles.eyebrow}>{t("heroEyebrow")}</Text>
+          <Text style={styles.title}>{t("heroTitle")}</Text>
+          <Text style={styles.subtitle}>{t("heroText")}</Text>
 
           <TouchableOpacity
             style={styles.primaryButton}
             activeOpacity={0.88}
             onPress={handleGettingBored}
           >
-            <Text style={styles.primaryButtonText}>Find a break partner</Text>
+            <Text style={styles.primaryButtonText}>{t("findPartner")}</Text>
             <Text style={styles.buttonArrow}>→</Text>
           </TouchableOpacity>
         </View>
@@ -124,19 +121,16 @@ export default function HomeScreen() {
             <Text style={styles.infoIconText}>15</Text>
           </View>
           <View style={styles.infoCopy}>
-            <Text style={styles.infoTitle}>Office Pulse</Text>
-            <Text style={styles.infoText}>
-              Share what you’re working on, applaud colleagues, and add a
-              thoughtful note.
-            </Text>
+            <Text style={styles.infoTitle}>{t("officePulse")}</Text>
+            <Text style={styles.infoText}>{t("officePulseText")}</Text>
           </View>
           <Text style={styles.infoArrow}>→</Text>
         </TouchableOpacity>
 
-        <Text style={styles.footerText}>Google-verified workplace membership. Community content can be reported and reviewed.</Text>
+        <Text style={styles.footerText}>{t("communitySafety")}</Text>
         <TouchableOpacity style={styles.briefCard} onPress={() => router.push("/break-briefs")}>
-          <Text style={styles.briefEyebrow}>BREAK BRIEFS</Text>
-          <Text style={styles.briefTitle}>Watch or share a 10-second workday moment →</Text>
+          <Text style={styles.briefEyebrow}>{t("breakBriefs")}</Text>
+          <Text style={styles.briefTitle}>{t("breakBriefsText")}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

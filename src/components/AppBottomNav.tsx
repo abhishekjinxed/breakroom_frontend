@@ -1,23 +1,26 @@
 import { router, usePathname } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Brand } from "../constants/brand";
+import { useLanguage } from "../context/LanguageContext";
 
 const items = [
-  { label: "Home", icon: "⌂", route: "/" },
-  { label: "Pulse", icon: "◉", route: "/office-pulse" },
-  { label: "Briefs", icon: "▶", route: "/break-briefs" },
-  { label: "Connect", icon: "◌", route: "/bored" },
+  { label: "home", icon: "⌂", route: "/" },
+  { label: "pulse", icon: "◉", route: "/office-pulse" },
+  { label: "briefs", icon: "▶", route: "/break-briefs" },
+  { label: "connect", icon: "◌", route: "/bored" },
 ] as const;
 
 export function AppBottomNav() {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   return <View style={styles.shell}>
     {items.map((item) => {
       const active = item.route === "/" ? pathname === "/" : pathname.startsWith(item.route);
-      return <TouchableOpacity key={item.route} accessibilityRole="button" accessibilityLabel={item.label} style={styles.item} onPress={() => router.replace(item.route)}>
+      const label = t(item.label);
+      return <TouchableOpacity key={item.route} accessibilityRole="button" accessibilityLabel={label} style={styles.item} onPress={() => router.replace(item.route)}>
         <Text style={[styles.icon, active && styles.active]}>{item.icon}</Text>
-        <Text style={[styles.label, active && styles.active]}>{item.label}</Text>
+        <Text style={[styles.label, active && styles.active]}>{label}</Text>
       </TouchableOpacity>;
     })}
   </View>;

@@ -6,14 +6,17 @@ import { View } from "react-native";
 import { connectSocket, disconnectSocket } from "../services/socket";
 
 import { AuthProvider, useAuth } from "../context/AuthContext";
+import { LanguageProvider } from "../context/LanguageContext";
 import { AppBottomNav } from "../components/AppBottomNav";
 import { TermsGate } from "../components/TermsGate";
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootNavigator />
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 
