@@ -3,6 +3,7 @@ import { Alert, Dimensions, FlatList, KeyboardAvoidingView, Modal, Platform, Pre
 import { useEvent } from "expo";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { createPulse, getPulses, WorkPulse } from "../api/pulses";
+import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { Brand } from "../constants/brand";
 import { pickAndUploadMedia } from "../services/cloudinary";
@@ -46,7 +47,7 @@ function Brief({ item, active }: { item: WorkPulse; active: boolean }) {
     <View pointerEvents="none" style={styles.playbackProgress}><View style={[styles.playbackProgressFill, { width: `${progress}%` }]} /></View>
     <View pointerEvents="none" style={styles.timer}><Text style={styles.timerText}>{remaining}s</Text><Text style={styles.timerLabel}>remaining</Text></View>
     {held && <View pointerEvents="none" style={styles.pauseBadge}><Text style={styles.pauseIcon}>Ⅱ</Text><Text style={styles.pauseText}>Paused</Text></View>}
-    <View pointerEvents="none" style={styles.overlay}><Text style={styles.brand}>BREAK BRIEFS</Text><Text style={styles.author}>{item.author.anonymousUsername}</Text><Text style={styles.text}>{item.text}</Text><Text style={styles.hint}>Hold to pause · Swipe for the next brief</Text></View>
+    <View pointerEvents="box-none" style={styles.overlay}><Text pointerEvents="none" style={styles.brand}>BREAK BRIEFS</Text><TouchableOpacity onPress={() => router.push({ pathname: "/profile/[userId]", params: { userId: item.author.id } } as any)}><Text style={styles.author}>{item.author.anonymousUsername}</Text></TouchableOpacity><Text pointerEvents="none" style={styles.text}>{item.text}</Text><Text pointerEvents="none" style={styles.hint}>Hold to pause · Swipe for the next brief</Text></View>
   </Pressable>;
 }
 

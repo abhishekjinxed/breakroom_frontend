@@ -107,8 +107,8 @@ export default function HomeScreen() {
           activeOpacity={0.85}
           onPress={() => router.push("/office-pulse")}
         >
-          <View style={[styles.infoIcon, { backgroundColor: colors.surfaceSoft }]}>
-            <Text style={[styles.infoIconText, { color: colors.navyMuted }]}>15</Text>
+          <View style={[styles.infoIcon, { backgroundColor: colors.amberSoft }]}>
+            <Text style={[styles.infoIconText, { color: colors.amber }]}>P</Text>
           </View>
           <View style={styles.infoCopy}>
             <Text style={[styles.infoTitle, { color: colors.text }]}>{t("officePulse")}</Text>
@@ -118,9 +118,9 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         <Text style={[styles.footerText, { color: colors.muted }]}>{t("communitySafety")}</Text>
-        <TouchableOpacity style={[styles.briefCard, { backgroundColor: colors.surfaceSoft, borderColor: colors.border }]} onPress={() => router.push("/break-briefs")}>
-          <Text style={[styles.briefEyebrow, { color: colors.teal }]}>{t("breakBriefs")}</Text>
-          <Text style={styles.briefTitle}>{t("breakBriefsText")}</Text>
+        <TouchableOpacity style={[styles.briefCard, { backgroundColor: colors.violetSoft, borderColor: colors.violet }]} onPress={() => router.push("/break-briefs")}>
+          <Text style={[styles.briefEyebrow, { color: colors.violet }]}>{t("breakBriefs")}</Text>
+          <Text style={[styles.briefTitle, { color: colors.navy }]}>{t("breakBriefsText")}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
