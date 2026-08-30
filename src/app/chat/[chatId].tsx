@@ -14,6 +14,7 @@ import {
 
 import { getSocket } from "../../services/socket";
 import { leaveBored } from "../../api/bored";
+import { getChatMessages } from "../../api/chat";
 import { Brand } from "../../constants/brand";
 import { useAuth } from "../../context/AuthContext";
 
@@ -53,6 +54,20 @@ export default function ChatScreen() {
     if (!chatId) {
       return;
     }
+
+    let cancelled = false;
+
+    async function loadHistory() {
+      if (!token) return;
+      try {
+        const history = await getChatMessages(token, chatId);
+        if (!cancelled) setMessages(history.map((message) => ({ ...message, chatId: message.chatId ?? chatId })));
+      } catch (error) {
+        console.error("CHAT HISTORY ERROR:", error);
+        if (!cancelled) setChatError("Unable to load chat history");
+      }
+    }
+    loadHistory();
 
     const socket = getSocket();
 
@@ -127,6 +142,7 @@ export default function ChatScreen() {
     socket.on("chat:partner-left", handlePartnerLeft);
 
     return () => {
+      cancelled = true;
       socket.off("connect", handleConnect);
 
       socket.off("disconnect", handleDisconnect);
@@ -139,7 +155,7 @@ export default function ChatScreen() {
 
       socket.off("chat:partner-left", handlePartnerLeft);
     };
-  }, [chatId]);
+  }, [chatId, token]);
 
   function sendMessage() {
     const message = text.trim();
