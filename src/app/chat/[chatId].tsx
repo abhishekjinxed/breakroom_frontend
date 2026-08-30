@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   FlatList,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -15,6 +16,7 @@ import {
 import { getSocket } from "../../services/socket";
 import { leaveBored } from "../../api/bored";
 import { getChatMessages } from "../../api/chat";
+import { requestWorkCircleFromChat } from "../../api/work-circle";
 import { Brand } from "../../constants/brand";
 import { useAuth } from "../../context/AuthContext";
 
@@ -212,6 +214,12 @@ export default function ChatScreen() {
     }
   }
 
+  async function addToWorkCircle() {
+    if (!token || !chatId || isDirect) return;
+    try { const result = await requestWorkCircleFromChat(token, chatId); Alert.alert("Work Circle", result.message ?? "Connection request sent."); }
+    catch (error: any) { Alert.alert("Work Circle", error?.response?.data?.message ?? "We could not send the request."); }
+  }
+
   function renderMessage({ item }: { item: Message }) {
     const isOwnMessage = item.senderId === user?.id;
 
@@ -280,7 +288,7 @@ export default function ChatScreen() {
           </Text>
         </View>
 
-        <View style={styles.headerSpacer} />
+        {isDirect ? <View style={styles.headerSpacer} /> : <TouchableOpacity onPress={addToWorkCircle} style={styles.circleLink}><Text style={styles.circleLinkText}>Add</Text></TouchableOpacity>}
       </View>
 
       {/* MESSAGES */}
@@ -391,6 +399,8 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 82,
   },
+  circleLink: { width: 82, alignItems: "flex-end", paddingVertical: 8 },
+  circleLinkText: { color: Brand.colors.teal, fontSize: 13, fontWeight: "800" },
 
   username: {
     fontSize: 17,

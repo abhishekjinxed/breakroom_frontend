@@ -117,11 +117,11 @@ export default function HomeScreen() {
           <Text style={[styles.infoArrow, { color: colors.teal }]}>→</Text>
         </TouchableOpacity>
 
-        <Text style={[styles.footerText, { color: colors.muted }]}>{t("communitySafety")}</Text>
-        <TouchableOpacity style={[styles.briefCard, { backgroundColor: colors.violetSoft, borderColor: colors.violet }]} onPress={() => router.push("/break-briefs")}>
-          <Text style={[styles.briefEyebrow, { color: colors.violet }]}>{t("breakBriefs")}</Text>
-          <Text style={[styles.briefTitle, { color: colors.navy }]}>{t("breakBriefsText")}</Text>
+        <TouchableOpacity style={[styles.cultureCard, { backgroundColor: colors.violetSoft, borderColor: colors.violet }]} onPress={() => router.push("/culture-hub" as any)}>
+          <Text style={[styles.briefEyebrow, { color: colors.violet }]}>CULTURE HUB</Text>
+          <Text style={[styles.briefTitle, { color: colors.navy }]}>Coffee Pairing, desk prompts, appreciation, and more →</Text>
         </TouchableOpacity>
+        <Text style={[styles.footerText, { color: colors.muted }]}>{t("communitySafety")}</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 22,
   },
-  briefCard: { marginTop: 16, padding: 18, backgroundColor: Brand.colors.navy, borderRadius: Brand.radius.control },
+  cultureCard: { marginTop: 16, padding: 18, borderRadius: Brand.radius.control, borderWidth: 1 },
   briefEyebrow: { color: Brand.colors.mint, fontSize: 10, fontWeight: "800", letterSpacing: 1.1 },
   briefTitle: { color: "#FFF", fontSize: 15, fontWeight: "800", marginTop: 7 },
   loginContainer: { flex: 1, justifyContent: "center", paddingHorizontal: 28, backgroundColor: Brand.colors.canvas },
