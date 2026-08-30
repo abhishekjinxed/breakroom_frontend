@@ -17,6 +17,7 @@ import { getSocket } from "../../services/socket";
 import { leaveBored } from "../../api/bored";
 import { getChatMessages } from "../../api/chat";
 import { requestWorkCircleFromChat } from "../../api/work-circle";
+import { deleteDirectConversation, getDirectMessages } from "../../api/inbox";
 import { Brand } from "../../constants/brand";
 import { useAuth } from "../../context/AuthContext";
 
@@ -62,8 +63,8 @@ export default function ChatScreen() {
     async function loadHistory() {
       if (!token) return;
       try {
-        const history = await getChatMessages(token, chatId);
-        if (!cancelled) setMessages(history.map((message) => ({ ...message, chatId: message.chatId ?? chatId })));
+        const history = isDirect ? await getDirectMessages(token, chatId) : await getChatMessages(token, chatId);
+        if (!cancelled) setMessages(history.map((message: Message) => ({ ...message, chatId: message.chatId ?? chatId })));
       } catch (error) {
         console.error("CHAT HISTORY ERROR:", error);
         if (!cancelled) setChatError("Unable to load chat history");
@@ -157,7 +158,7 @@ export default function ChatScreen() {
 
       socket.off("chat:partner-left", handlePartnerLeft);
     };
-  }, [chatId, token]);
+  }, [chatId, token, isDirect]);
 
   function sendMessage() {
     const message = text.trim();
@@ -218,6 +219,14 @@ export default function ChatScreen() {
     if (!token || !chatId || isDirect) return;
     try { const result = await requestWorkCircleFromChat(token, chatId); Alert.alert("Work Circle", result.message ?? "Connection request sent."); }
     catch (error: any) { Alert.alert("Work Circle", error?.response?.data?.message ?? "We could not send the request."); }
+  }
+
+  function confirmDeleteConversation() {
+    if (!token || !chatId) return;
+    Alert.alert("Delete this conversation?", "Deleting this chat will also remove this person from your friends. You will need to send a new request to connect again.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete & Remove Friend", style: "destructive", onPress: async () => { try { await deleteDirectConversation(token, chatId); router.replace("/inbox" as any); } catch { Alert.alert("Couldn’t delete conversation", "Please try again."); } } },
+    ]);
   }
 
   function renderMessage({ item }: { item: Message }) {
@@ -288,7 +297,7 @@ export default function ChatScreen() {
           </Text>
         </View>
 
-        {isDirect ? <View style={styles.headerSpacer} /> : <TouchableOpacity onPress={addToWorkCircle} style={styles.circleLink}><Text style={styles.circleLinkText}>Add</Text></TouchableOpacity>}
+        {isDirect ? <TouchableOpacity onPress={confirmDeleteConversation} style={styles.circleLink}><Text style={styles.deleteLinkText}>Delete</Text></TouchableOpacity> : <TouchableOpacity onPress={addToWorkCircle} style={styles.circleLink}><Text style={styles.circleLinkText}>Add</Text></TouchableOpacity>}
       </View>
 
       {/* MESSAGES */}
@@ -401,6 +410,7 @@ const styles = StyleSheet.create({
   },
   circleLink: { width: 82, alignItems: "flex-end", paddingVertical: 8 },
   circleLinkText: { color: Brand.colors.teal, fontSize: 13, fontWeight: "800" },
+  deleteLinkText: { color: Brand.colors.danger, fontSize: 13, fontWeight: "800" },
 
   username: {
     fontSize: 17,
