@@ -7,6 +7,7 @@ export type PublicProfile = {
   gender: string | null;
   socialLink: string | null;
   createdAt: string;
+  age: number | null;
 };
 
 export async function getPublicProfile(token: string, userId: string) {

@@ -27,9 +27,11 @@ interface Message {
 
 export default function ChatScreen() {
   const { token, user } = useAuth();
-  const { chatId } = useLocalSearchParams<{
+  const { chatId, direct } = useLocalSearchParams<{
     chatId: string;
+    direct?: string;
   }>();
+  const isDirect = direct === "1";
 
   const [messages, setMessages] = useState<Message[]>([]);
 
@@ -179,6 +181,10 @@ export default function ChatScreen() {
   }
 
   async function handleLeaveChat() {
+    if (isDirect) {
+      router.back();
+      return;
+    }
     try {
       if (token) {
         await leaveBored(token);
@@ -232,11 +238,11 @@ export default function ChatScreen() {
           onPress={handleLeaveChat}
           style={styles.backButton}
         >
-          <Text style={styles.leaveText}>Leave chat</Text>
+          <Text style={styles.leaveText}>{isDirect ? "Back" : "Leave chat"}</Text>
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
-          <Text style={styles.username}>Breakroom chat</Text>
+          <Text style={styles.username}>{isDirect ? "Work Circle" : "Breakroom chat"}</Text>
 
           <Text
             style={[
