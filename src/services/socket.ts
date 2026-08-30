@@ -14,7 +14,6 @@ export function connectSocket(token: string) {
   }
 
   socket = io(API_URL, {
-    transports: ["websocket"],
     autoConnect: true,
     auth: {
       token,
