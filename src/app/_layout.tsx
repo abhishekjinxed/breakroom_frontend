@@ -10,6 +10,7 @@ import { LanguageProvider } from "../context/LanguageContext";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import { AppBottomNav } from "../components/AppBottomNav";
 import { TermsGate } from "../components/TermsGate";
+import { PaperPlaneInbox } from "../components/PaperPlaneInbox";
 
 export default function RootLayout() {
   return (
@@ -49,6 +50,7 @@ function RootNavigator() {
         <Stack screenOptions={{ headerShown: false }} />
       </View>
       {!!token && !hideNavigation && <AppBottomNav />}
+      {!!token && <PaperPlaneInbox />}
       {!!user && !user.termsAcceptedAt && <TermsGate />}
     </View>
   );
