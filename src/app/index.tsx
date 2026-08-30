@@ -53,6 +53,8 @@ export default function HomeScreen() {
     );
   }
 
+  return <FocusedHome username={user.anonymousUsername} colors={colors} onLogout={logout} />;
+
   function handleGettingBored() {
     router.push("/bored");
   }
@@ -68,13 +70,13 @@ export default function HomeScreen() {
           <View>
             <Text style={[styles.brand, { color: colors.teal }]}>BREAKROOM</Text>
             <Text style={[styles.greeting, { color: colors.muted }]}>{t("greeting")}</Text>
-            <Text style={[styles.username, { color: colors.navy }]}>{user.anonymousUsername}</Text>
+            <Text style={[styles.username, { color: colors.navy }]}>{user!.anonymousUsername}</Text>
           </View>
 
           <View style={styles.accountActions}>
             <View style={[styles.profileBadge, { backgroundColor: colors.tealSoft }]}>
               <Text style={[styles.profileInitial, { color: colors.teal }]}>
-                {user.anonymousUsername.charAt(0).toUpperCase()}
+                {user!.anonymousUsername.charAt(0).toUpperCase()}
               </Text>
             </View>
             <View style={styles.accountLinks}><TouchableOpacity onPress={() => router.push("/account")}><Text style={[styles.logoutText, { color: colors.muted }]}>{t("account")}</Text></TouchableOpacity><TouchableOpacity onPress={logout}><Text style={[styles.logoutText, { color: colors.muted }]}>{t("signOut")}</Text></TouchableOpacity></View>
@@ -125,6 +127,15 @@ export default function HomeScreen() {
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function FocusedHome({ username, colors, onLogout }: { username: string; colors: any; onLogout: () => Promise<void> }) {
+  return <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.canvas }]}><ScrollView contentContainerStyle={styles.focusedContent}>
+    <View style={styles.focusedHeader}><View><Text style={[styles.brand, { color: colors.teal }]}>BREAKROOM</Text><Text style={[styles.focusedTitle, { color: colors.navy }]}>Hello, {username}</Text><Text style={[styles.focusedSub, { color: colors.muted }]}>Build a thoughtful circle, one connection at a time.</Text></View><TouchableOpacity onPress={onLogout}><Text style={[styles.logoutText, { color: colors.muted }]}>Sign out</Text></TouchableOpacity></View>
+    <TouchableOpacity onPress={() => router.push("/directory" as any)} style={[styles.focusedHero, { backgroundColor: colors.hero }]}><Text style={[styles.focusedEyebrow, { color: colors.mint }]}>START A CONNECTION</Text><Text style={styles.focusedHeroTitle}>Send a Plane or invite someone to an Empty Desk.</Text><Text style={styles.focusedHeroText}>Choose a member, send a request, and start a private chat only after they accept.</Text><Text style={[styles.focusedAction, { color: colors.mint }]}>Browse people →</Text></TouchableOpacity>
+    <View style={styles.focusedGrid}><TouchableOpacity onPress={() => router.push("/inbox" as any)} style={[styles.focusedTile, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.tileIcon, { color: colors.teal }]}>✉</Text><Text style={[styles.tileTitle, { color: colors.text }]}>Inbox</Text><Text style={[styles.tileText, { color: colors.muted }]}>Private chats with accepted connections.</Text></TouchableOpacity><TouchableOpacity onPress={() => router.push("/work-circle" as any)} style={[styles.focusedTile, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.tileIcon, { color: colors.violet }]}>◎</Text><Text style={[styles.tileTitle, { color: colors.text }]}>Requests</Text><Text style={[styles.tileText, { color: colors.muted }]}>Accept or decline new connection requests.</Text></TouchableOpacity></View>
+    <TouchableOpacity onPress={() => router.push("/account")} style={styles.accountLink}><Text style={[styles.accountLinkText, { color: colors.muted }]}>Account & privacy →</Text></TouchableOpacity>
+  </ScrollView></SafeAreaView>;
 }
 
 function GoogleLoginButton() {
@@ -204,6 +215,7 @@ const styles = StyleSheet.create({
     paddingTop: 28,
     paddingBottom: 32,
   },
+  focusedContent: { padding: 22, paddingTop: 32, paddingBottom: 36 }, focusedHeader: { flexDirection: "row", justifyContent: "space-between", gap: 14 }, focusedTitle: { fontSize: 27, fontWeight: "900" }, focusedSub: { fontSize: 14, lineHeight: 20, marginTop: 6, maxWidth: 270 }, focusedHero: { borderRadius: 23, marginTop: 31, padding: 23 }, focusedEyebrow: { fontSize: 10, fontWeight: "900", letterSpacing: 1.3 }, focusedHeroTitle: { color: "#FFF", fontSize: 24, lineHeight: 31, fontWeight: "900", marginTop: 11 }, focusedHeroText: { color: "#D8E1FF", fontSize: 14, lineHeight: 20, marginTop: 10 }, focusedAction: { fontWeight: "900", marginTop: 20 }, focusedGrid: { flexDirection: "row", gap: 12, marginTop: 14 }, focusedTile: { flex: 1, minHeight: 160, borderWidth: 1, borderRadius: 18, padding: 16 }, tileIcon: { fontSize: 21, fontWeight: "900" }, tileTitle: { fontSize: 16, fontWeight: "900", marginTop: 16 }, tileText: { fontSize: 12, lineHeight: 18, marginTop: 5 }, accountLink: { alignSelf: "center", padding: 18, marginTop: 14 }, accountLinkText: { fontWeight: "800", fontSize: 13 },
 
   loading: {
     flex: 1,
