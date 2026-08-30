@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 
@@ -13,15 +13,21 @@ export default function BoredScreen() {
   const { user, token } = useAuth();
   const [state, setState] = useState<ScreenState>("READY");
   const [loading, setLoading] = useState(false);
+  const matchedRef = useRef(false);
+
+  function openMatchedChat(chatId: string) {
+    if (matchedRef.current || !chatId) return;
+    matchedRef.current = true;
+    setState("MATCHED");
+    setLoading(false);
+    router.replace(`/chat/${chatId}`);
+  }
 
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
     const handleMatch = (data: { chatId: string }) => {
-      if (!data.chatId) return;
-      setState("MATCHED");
-      setLoading(false);
-      router.replace(`/chat/${data.chatId}`);
+      openMatchedChat(data.chatId);
     };
     socket.on("match_found", handleMatch);
     return () => {
@@ -29,15 +35,34 @@ export default function BoredScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!token || state !== "SEARCHING") return;
+
+    // Socket delivery is the fast path. This retry makes matching reliable
+    // when one client connects late or misses that event.
+    const retryMatch = async () => {
+      try {
+        const result = await joinBored(token);
+        if (result.matched && result.chat?.id) openMatchedChat(result.chat.id);
+      } catch {
+        // Keep the user in the queue; the next retry or socket event can
+        // still complete the match.
+      }
+    };
+
+    const interval = setInterval(retryMatch, 3000);
+    return () => clearInterval(interval);
+  }, [state, token]);
+
   async function handleFindSomeone() {
     if (!token || loading || state === "SEARCHING") return;
     try {
+      matchedRef.current = false;
       setLoading(true);
       setState("SEARCHING");
       const result = await joinBored(token);
       if (result.matched && result.chat?.id) {
-        setState("MATCHED");
-        router.replace(`/chat/${result.chat.id}`);
+        openMatchedChat(result.chat.id);
       }
     } catch (error: any) {
       setState("READY");
@@ -52,6 +77,7 @@ export default function BoredScreen() {
     try {
       setLoading(true);
       await stopLooking(token);
+      matchedRef.current = false;
       setState("READY");
     } catch (error: any) {
       Alert.alert("Unable to stop searching", error?.response?.data?.message || "Please try again.");
@@ -69,9 +95,6 @@ export default function BoredScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.topBar}>
-          <TouchableOpacity disabled={isSearching} onPress={() => router.replace("/")} style={styles.backButton}>
-            <Text style={styles.backText}>← Dashboard</Text>
-          </TouchableOpacity>
           <Text style={styles.brand}>BREAKROOM</Text>
         </View>
 
@@ -111,10 +134,9 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Brand.colors.canvas },
   container: { flex: 1, paddingHorizontal: 22 },
   loadingScreen: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Brand.colors.canvas },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 16 },
-  backButton: { paddingVertical: 10 }, backText: { color: Brand.colors.navyMuted, fontSize: 14, fontWeight: "700" },
+  topBar: { alignItems: "center", paddingTop: 16 },
   brand: { color: Brand.colors.teal, fontSize: 11, fontWeight: "800", letterSpacing: 1.5 },
-  content: { flex: 1, justifyContent: "center", paddingBottom: 70 },
+  content: { flex: 1, justifyContent: "center", paddingBottom: 20 },
   stepRow: { flexDirection: "row", alignItems: "center", alignSelf: "center", marginBottom: 25 },
   stepActive: { width: 8, height: 8, borderRadius: 4, backgroundColor: Brand.colors.teal }, stepIdle: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#C8D1DC" }, stepLine: { width: 42, height: 1, backgroundColor: "#C8D1DC" },
   matchCard: { backgroundColor: Brand.colors.surface, borderRadius: Brand.radius.card, padding: 25, borderWidth: 1, borderColor: Brand.colors.border },

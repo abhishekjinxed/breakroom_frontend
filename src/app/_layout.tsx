@@ -39,7 +39,7 @@ function RootNavigator() {
     };
   }, [token]);
 
-  const hideNavigation = pathname.startsWith("/chat/") || pathname.startsWith("/auth/") || pathname === "/bored";
+  const hideNavigation = pathname.startsWith("/chat/") || pathname.startsWith("/auth/");
 
   return (
     <View style={{ flex: 1 }}>
