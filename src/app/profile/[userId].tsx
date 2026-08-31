@@ -7,7 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 
 export default function PublicProfileScreen() {
-  const { userId } = useLocalSearchParams<{ userId: string }>();
+  const { userId, fromChat } = useLocalSearchParams<{ userId: string; fromChat?: string }>();
   const { token } = useAuth();
   const { colors } = useTheme();
   const [profile, setProfile] = useState<PublicProfile | null>(null);
@@ -38,7 +38,7 @@ export default function PublicProfileScreen() {
       {!!profile.bio && <Text style={[styles.bio, { color: colors.text }]}>{profile.bio}</Text>}
       {(!!profile.gender || profile.age !== null) && <View style={styles.tags}>{profile.age !== null && <View style={[styles.tag, { backgroundColor: colors.violetSoft }]}><Text style={[styles.tagText, { color: colors.violet }]}>Age {profile.age}</Text></View>}{!!profile.gender && <View style={[styles.tag, { backgroundColor: colors.tealSoft }]}><Text style={[styles.tagText, { color: colors.teal }]}>{profile.gender}</Text></View>}</View>}
       {!!profile.socialLink && <TouchableOpacity onPress={() => Linking.openURL(profile.socialLink!)} style={[styles.linkButton, { borderColor: colors.border }]}><Text style={[styles.linkText, { color: colors.violet }]}>Open social profile ↗</Text></TouchableOpacity>}
-      <TouchableOpacity disabled={sending} onPress={connect} style={[styles.connectButton, { backgroundColor: colors.navy }, sending && styles.disabled]}><Text style={styles.connectText}>{sending ? "Sending…" : "Send Plane / Empty Desk"}</Text></TouchableOpacity>
+      {fromChat !== "1" && <TouchableOpacity disabled={sending} onPress={connect} style={[styles.connectButton, { backgroundColor: colors.navy }, sending && styles.disabled]}><Text style={styles.connectText}>{sending ? "Sending…" : "Send Plane / Empty Desk"}</Text></TouchableOpacity>}
       {!profile.bio && !profile.gender && !profile.socialLink && <Text style={[styles.empty, { color: colors.muted }]}>This member has not shared any profile details yet.</Text>}
     </View>
   </View></SafeAreaView>;
