@@ -21,9 +21,11 @@ export function AppBottomNav() {
     const socket = getSocket();
     const onPlane = () => setPlaneAlert(true);
     const onChatRemoved = () => setChatAlert(true);
+    const onInboxUpdated = () => setChatAlert(true);
     socket?.on("paper_plane:received", onPlane);
     socket?.on("chat:partner-left", onChatRemoved);
-    return () => { socket?.off("paper_plane:received", onPlane); socket?.off("chat:partner-left", onChatRemoved); };
+    socket?.on("inbox:updated", onInboxUpdated);
+    return () => { socket?.off("paper_plane:received", onPlane); socket?.off("chat:partner-left", onChatRemoved); socket?.off("inbox:updated", onInboxUpdated); };
   }, []);
 
   return <View style={[styles.shell, { backgroundColor: colors.surface, borderColor: colors.border }]}>
