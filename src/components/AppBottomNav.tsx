@@ -6,7 +6,6 @@ import { useTheme } from "../context/ThemeContext";
 const items = [
   { label: "home", icon: "⌂", route: "/" },
   { label: "Inbox", icon: "✉", route: "/inbox" },
-  { label: "Requests", icon: "◎", route: "/work-circle" },
 ] as const;
 
 export function AppBottomNav() {
@@ -17,7 +16,7 @@ export function AppBottomNav() {
   return <View style={[styles.shell, { backgroundColor: colors.surface, borderColor: colors.border }]}>
     {items.map((item) => {
       const active = item.route === "/" ? pathname === "/" : pathname.startsWith(item.route);
-      const label = ["/inbox", "/work-circle"].includes(item.route) ? item.label : t(item.label as any);
+      const label = item.route === "/inbox" ? item.label : t(item.label as any);
       return <TouchableOpacity key={item.route} accessibilityRole="button" accessibilityLabel={label} style={styles.item} onPress={() => router.replace(item.route as any)}>
         <Text style={[styles.icon, { color: active ? colors.teal : colors.muted }]}>{item.icon}</Text>
         <Text style={[styles.label, { color: active ? colors.teal : colors.muted }]}>{label}</Text>
