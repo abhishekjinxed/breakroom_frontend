@@ -1,39 +1,27 @@
 import { router, usePathname } from "expo-router";
-import { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../context/ThemeContext";
-import { getSocket } from "../services/socket";
+import { useNotifications } from "../context/NotificationContext";
 
 const items = [
   { label: "home", icon: "⌂", route: "/" },
   { label: "Inbox", icon: "✉", route: "/inbox" },
+  { label: "Alerts", icon: "●", route: "/notifications" },
 ] as const;
 
 export function AppBottomNav() {
   const pathname = usePathname();
   const { t } = useLanguage();
   const { colors } = useTheme();
-  const [planeAlert, setPlaneAlert] = useState(false);
-  const [chatAlert, setChatAlert] = useState(false);
-
-  useEffect(() => {
-    const socket = getSocket();
-    const onPlane = () => setPlaneAlert(true);
-    const onChatRemoved = () => setChatAlert(true);
-    const onInboxUpdated = () => setChatAlert(true);
-    socket?.on("paper_plane:received", onPlane);
-    socket?.on("chat:partner-left", onChatRemoved);
-    socket?.on("inbox:updated", onInboxUpdated);
-    return () => { socket?.off("paper_plane:received", onPlane); socket?.off("chat:partner-left", onChatRemoved); socket?.off("inbox:updated", onInboxUpdated); };
-  }, []);
+  const { unreadCount } = useNotifications();
 
   return <View style={[styles.shell, { backgroundColor: colors.surface, borderColor: colors.border }]}>
     {items.map((item) => {
       const active = item.route === "/" ? pathname === "/" : pathname.startsWith(item.route);
       const label = item.route === "/inbox" ? item.label : t(item.label as any);
-      const hasAlert = item.route === "/" ? planeAlert : chatAlert;
-      return <TouchableOpacity key={item.route} accessibilityRole="button" accessibilityLabel={label} style={styles.item} onPress={() => { if (item.route === "/") setPlaneAlert(false); else setChatAlert(false); router.replace(item.route as any); }}>
+      const hasAlert = item.route === "/notifications" && unreadCount > 0;
+      return <TouchableOpacity key={item.route} accessibilityRole="button" accessibilityLabel={label} style={styles.item} onPress={() => router.replace(item.route as any)}>
         <Text style={[styles.icon, { color: active ? colors.teal : colors.muted }]}>{item.icon}</Text>
         {hasAlert && <View style={[styles.alertDot, { backgroundColor: colors.teal }]} />}
         <Text style={[styles.label, { color: active ? colors.teal : colors.muted }]}>{label}</Text>

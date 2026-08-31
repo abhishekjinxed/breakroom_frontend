@@ -10,10 +10,11 @@ import { LanguageProvider } from "../context/LanguageContext";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import { AppBottomNav } from "../components/AppBottomNav";
 import { TermsGate } from "../components/TermsGate";
+import { NotificationProvider } from "../context/NotificationContext";
 
 export default function RootLayout() {
   return (
-    <ThemeProvider><LanguageProvider><AuthProvider><RootNavigator /></AuthProvider></LanguageProvider></ThemeProvider>
+    <ThemeProvider><LanguageProvider><AuthProvider><NotificationProvider><RootNavigator /></NotificationProvider></AuthProvider></LanguageProvider></ThemeProvider>
   );
 }
 
