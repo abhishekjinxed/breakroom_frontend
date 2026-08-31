@@ -134,18 +134,19 @@ export default function HomeScreen() {
 }
 
 function FocusedHome({ username, colors, onLogout }: { username: string; colors: any; onLogout: () => Promise<void> }) {
+  const [quote, setQuote] = useState({ text: "Small progress is still progress.", author: "Breakroom" });
+  useEffect(() => { getDeskQuote().then(setQuote).catch(() => undefined); }, []);
   return <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.canvas }]}><ScrollView contentContainerStyle={styles.focusedContent}>
     <View style={styles.focusedHeader}><View><Text style={[styles.brand, { color: colors.teal }]}>BREAKROOM</Text><Text style={[styles.focusedTitle, { color: colors.navy }]}>Your desk, {username}</Text><Text style={[styles.focusedSub, { color: colors.muted }]}>Paper Planes land here when someone wants to connect.</Text></View><TouchableOpacity onPress={onLogout}><Text style={[styles.logoutText, { color: colors.muted }]}>Sign out</Text></TouchableOpacity></View>
-    <View style={[styles.deskScene, { backgroundColor: colors.hero }]}><Text style={styles.window}>☕     ▣</Text><View style={styles.laptop}><Text style={styles.laptopScreen}>BREAKROOM</Text></View><Text style={styles.pen}>╱</Text><DeskNotepad colors={colors} /><View style={styles.photoFrame}><Text style={styles.photo}>☕</Text></View><View style={[styles.deskTop, { backgroundColor: colors.mint }]} /><DeskPlanes /><Text style={styles.deskCaption}>Tap a landed Paper Plane to read it.</Text><TouchableOpacity onPress={() => router.push("/bored" as any)} style={[styles.sendPlaneButton, { backgroundColor: colors.mint }]}><Text style={[styles.sendPlaneText, { color: colors.onAccent }]}>Send a Paper Plane</Text></TouchableOpacity></View>
+    <View style={[styles.deskScene, { backgroundColor: colors.hero }]}><Text style={styles.window}>☕     ▣</Text><LiveLaptop /><Text style={styles.pen}>╱</Text><DeskNotepad colors={colors} quote={quote} /><View style={styles.waterBottle}><View style={styles.bottleCap} /><View style={styles.bottleLabel}><Text style={styles.bottleLabelText}>H₂O</Text></View></View><View style={styles.headphones}><View style={styles.headphoneBand} /><View style={[styles.headphoneCup, styles.headphoneCupLeft]} /><View style={[styles.headphoneCup, styles.headphoneCupRight]} /></View><View style={styles.photoFrame}><Text style={styles.photo}>☕</Text></View><View style={[styles.deskTop, { backgroundColor: colors.mint }]} /><DeskPlanes /><Text style={styles.deskCaption}>Tap a landed Paper Plane to read it.</Text><TouchableOpacity onPress={() => router.push("/bored" as any)} style={[styles.sendPlaneButton, { backgroundColor: colors.mint }]}><Text style={[styles.sendPlaneText, { color: colors.onAccent }]}>Send a Paper Plane</Text></TouchableOpacity></View>
     <DeskNotesTicker />
+    <View style={[styles.workThoughtCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.workThoughtLabel, { color: colors.teal }]}>WORK THOUGHT</Text><Text style={[styles.workThoughtText, { color: colors.text }]}>“{quote.text}”</Text><Text style={[styles.workThoughtAuthor, { color: colors.muted }]}>— {quote.author}</Text></View>
     <TouchableOpacity onPress={() => router.push("/account")} style={styles.accountLink}><Text style={[styles.accountLinkText, { color: colors.muted }]}>Account & privacy →</Text></TouchableOpacity>
   </ScrollView></SafeAreaView>;
 }
 
-function DeskNotepad({ colors }: { colors: any }) {
+function DeskNotepad({ colors, quote }: { colors: any; quote: { text: string; author: string } }) {
   const motion = useRef(new Animated.Value(0)).current;
-  const [quote, setQuote] = useState({ text: "Small progress is still progress.", author: "Breakroom" });
-  useEffect(() => { getDeskQuote().then(setQuote).catch(() => undefined); }, []);
   useEffect(() => {
     const animation = Animated.loop(Animated.sequence([
       Animated.timing(motion, { toValue: 1, duration: 3400, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
@@ -155,7 +156,22 @@ function DeskNotepad({ colors }: { colors: any }) {
   }, [motion]);
   const rotate = motion.interpolate({ inputRange: [0, 1], outputRange: ["6deg", "12deg"] });
   const translate = motion.interpolate({ inputRange: [0, 1], outputRange: [0, 6] });
-  return <Animated.View style={[styles.notepad, { transform: [{ translateX: translate }, { rotate }] }]}><Text style={styles.notepadLine}>WORK THOUGHT</Text><Text numberOfLines={3} style={styles.quoteText}>“{quote.text}”</Text><Text numberOfLines={1} style={[styles.quoteAuthor, { color: colors.violet }]}>— {quote.author}</Text></Animated.View>;
+  return <Animated.View style={[styles.notepad, { transform: [{ translateX: translate }, { rotate }] }]}><Text style={styles.notepadLine}>WORK THOUGHT</Text><Text numberOfLines={3} style={styles.quoteText}>“{quote.text}”</Text><Text style={[styles.quoteAuthor, { color: colors.violet }]}>⌕ Read below</Text></Animated.View>;
+}
+
+function LiveLaptop() {
+  const motion = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const animation = Animated.loop(Animated.sequence([
+      Animated.timing(motion, { toValue: 1, duration: 5200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      Animated.timing(motion, { toValue: 0, duration: 5200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+    ]));
+    animation.start(); return () => animation.stop();
+  }, [motion]);
+  const driftA = motion.interpolate({ inputRange: [0, 1], outputRange: [-10, 14] });
+  const driftB = motion.interpolate({ inputRange: [0, 1], outputRange: [13, -10] });
+  const glow = motion.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0.92] });
+  return <View style={styles.laptop}><View style={styles.laptopWallpaper}><Animated.View style={[styles.wallpaperOrbA, { transform: [{ translateX: driftA }], opacity: glow }]} /><Animated.View style={[styles.wallpaperOrbB, { transform: [{ translateX: driftB }], opacity: glow }]} /><Text style={styles.laptopScreen}>BREAKROOM</Text></View><View style={styles.laptopBase} /></View>;
 }
 
 function GoogleLoginButton() {
@@ -452,4 +468,20 @@ const styles = StyleSheet.create({
   loginText: { color: Brand.colors.muted, fontSize: 16, lineHeight: 24, marginTop: 14 },
   loginGoogleButton: { marginTop: 32, minHeight: 56, alignItems: "center", justifyContent: "center", borderRadius: Brand.radius.control, backgroundColor: Brand.colors.navy },
   loginGoogleText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
+  laptopWallpaper: { flex: 1, alignSelf: "stretch", overflow: "hidden", backgroundColor: "#1E193F", justifyContent: "flex-end", padding: 7 },
+  wallpaperOrbA: { position: "absolute", width: 76, height: 76, borderRadius: 38, backgroundColor: "#FE826B", top: -31, left: -14 },
+  wallpaperOrbB: { position: "absolute", width: 92, height: 92, borderRadius: 46, backgroundColor: "#6856C8", right: -38, bottom: -43 },
+  laptopBase: { position: "absolute", left: -10, right: -10, height: 7, bottom: -10, borderRadius: 6, backgroundColor: "#A9A8AC", borderWidth: 1, borderColor: "#D5D3D8" },
+  waterBottle: { position: "absolute", left: 140, top: 172, width: 22, height: 56, borderRadius: 8, borderWidth: 2, borderColor: "#9AC8D4", backgroundColor: "#75BFD1", zIndex: 2, overflow: "visible" },
+  bottleCap: { position: "absolute", width: 13, height: 7, backgroundColor: "#E5EEF0", borderRadius: 3, top: -8, left: 3 },
+  bottleLabel: { position: "absolute", left: 1, right: 1, top: 23, height: 14, justifyContent: "center", alignItems: "center", backgroundColor: "#EAF8FA" },
+  bottleLabelText: { color: "#37778B", fontSize: 6, fontWeight: "900" },
+  headphones: { position: "absolute", right: 17, top: 189, width: 43, height: 34, zIndex: 2 },
+  headphoneBand: { position: "absolute", width: 38, height: 30, left: 2, borderTopLeftRadius: 22, borderTopRightRadius: 22, borderWidth: 6, borderBottomWidth: 0, borderColor: "#36262B" },
+  headphoneCup: { position: "absolute", bottom: 0, height: 15, width: 10, borderRadius: 5, backgroundColor: "#4B343A" },
+  headphoneCupLeft: { left: 0 }, headphoneCupRight: { right: 0 },
+  workThoughtCard: { borderWidth: 1, borderRadius: 16, padding: 16, marginTop: 14 },
+  workThoughtLabel: { fontSize: 10, letterSpacing: 1.1, fontWeight: "900" },
+  workThoughtText: { fontSize: 15, lineHeight: 22, fontWeight: "700", marginTop: 8 },
+  workThoughtAuthor: { fontSize: 12, fontWeight: "800", marginTop: 8 },
 });
