@@ -29,7 +29,7 @@ export function PaperPlaneInbox() {
       setResponding(true);
       const result = await respondToPaperPlane(token, invite.id, accept);
       setInvite(null);
-      if (result.accepted && result.chatId) router.replace(`/chat/${result.chatId}`);
+      if (result.accepted && result.chatId) router.replace({ pathname: "/chat/[chatId]", params: { chatId: result.chatId, direct: "1" } });
     } catch (error: any) {
       setInvite(null);
       Alert.alert("Plane no longer available", error?.response?.data?.message || "This invitation has expired or was withdrawn.");
