@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 
 import { getPendingPaperPlanes, PaperPlaneInvite, respondToPaperPlane } from "../api/bored";
@@ -19,6 +19,7 @@ export function DeskPlanes() {
   const [invites, setInvites] = useState<PaperPlaneInvite[]>([]);
   const [selected, setSelected] = useState<PaperPlaneInvite | null>(null);
   const [responding, setResponding] = useState(false);
+  const [responseError, setResponseError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -35,8 +36,9 @@ export function DeskPlanes() {
     if (!token || !selected || responding) return;
     const invite = selected;
     try {
-      setResponding(true);
+      setResponding(true); setResponseError(null);
       const result = await respondToPaperPlane(token, invite.id, accept);
+      if (accept && (!result.accepted || !result.chatId)) throw new Error("The Paper Plane was accepted, but its Inbox conversation was not created. Please try again.");
       setInvites((current) => current.filter((item) => item.id !== invite.id));
       setSelected(null);
       // An accepted plane creates a persistent private conversation. Take the
@@ -44,9 +46,10 @@ export function DeskPlanes() {
       // of their conversations instead of opening a one-off chat screen.
       if (result.accepted && result.chatId) router.replace("/inbox" as any);
     } catch (error: any) {
-      setInvites((current) => current.filter((item) => item.id !== invite.id));
-      setSelected(null);
-      Alert.alert("Plane no longer available", error?.response?.data?.message || "This paper plane has expired or was withdrawn.");
+      // Keep the plane on the desk when Accept fails. Previously it was
+      // removed and a browser-only alert was easy to miss, making a failed
+      // request look like a successful acceptance.
+      setResponseError(error?.response?.data?.message || error?.message || "We could not accept this Paper Plane. Please try again.");
     } finally { setResponding(false); }
   }
 
@@ -67,11 +70,12 @@ export function DeskPlanes() {
         <Text style={styles.sender}>From {selected?.sender.anonymousUsername}</Text>
         <Text style={styles.note}>“{snippet}”</Text>
         <Text style={styles.hint}>Accept to open a private conversation in your Inbox.</Text>
+        {responseError && <Text style={styles.error}>{responseError}</Text>}
         {responding ? <ActivityIndicator color={Brand.colors.teal} style={styles.loader} /> : <View style={styles.actions}>
           <TouchableOpacity style={styles.decline} onPress={() => respond(false)}><Text style={styles.declineText}>Let it pass</Text></TouchableOpacity>
           <TouchableOpacity style={styles.accept} onPress={() => respond(true)}><Text style={styles.acceptText}>Accept plane</Text></TouchableOpacity>
         </View>}
-        {!responding && <TouchableOpacity onPress={() => setSelected(null)} style={styles.close}><Text style={styles.closeText}>Back to desk</Text></TouchableOpacity>}
+        {!responding && <TouchableOpacity onPress={() => { setResponseError(null); setSelected(null); }} style={styles.close}><Text style={styles.closeText}>Back to desk</Text></TouchableOpacity>}
       </View></View>
     </Modal>
   </>;
@@ -82,5 +86,5 @@ const styles = StyleSheet.create({
   plane: { position: "absolute", width: 64, height: 46, borderRadius: 6, backgroundColor: "#FFF2D9", borderWidth: 1, borderColor: "#D4A979", justifyContent: "center", alignItems: "center", shadowColor: "#3C2418", shadowOpacity: 0.25, shadowRadius: 4, elevation: 4 },
   planeMark: { fontSize: 31, color: "#9A5A32", lineHeight: 34 }, seal: { position: "absolute", right: 5, bottom: 3, height: 14, minWidth: 14, borderRadius: 7, backgroundColor: "#6E3B2A", color: "#FFF8ED", fontSize: 8, fontWeight: "900", textAlign: "center", lineHeight: 14, overflow: "hidden" },
   count: { position: "absolute", left: 18, bottom: 0, backgroundColor: "rgba(62, 40, 30, .82)", borderRadius: 10, paddingHorizontal: 9, paddingVertical: 5 }, countText: { color: "#FFF7E8", fontSize: 10, fontWeight: "900" },
-  backdrop: { flex: 1, justifyContent: "center", padding: 24, backgroundColor: "rgba(55, 34, 22, .62)" }, letter: { backgroundColor: "#FFF8ED", borderRadius: 24, padding: 23, alignItems: "center" }, letterPlane: { color: "#9A5A32", fontSize: 42, transform: [{ rotate: "-12deg" }] }, eyebrow: { color: "#9A5A32", fontSize: 10, letterSpacing: 1.2, fontWeight: "900", marginTop: 5 }, sender: { color: "#3E281E", fontSize: 22, fontWeight: "900", textAlign: "center", marginTop: 8 }, note: { color: "#543A2D", backgroundColor: "#F4E5D2", borderRadius: 14, padding: 14, width: "100%", textAlign: "center", fontSize: 14, lineHeight: 20, marginTop: 15 }, hint: { color: "#806657", textAlign: "center", fontSize: 12, lineHeight: 18, marginTop: 10 }, actions: { flexDirection: "row", width: "100%", gap: 10, marginTop: 20 }, decline: { flex: 1, borderWidth: 1, borderColor: Brand.colors.border, borderRadius: 12, minHeight: 48, alignItems: "center", justifyContent: "center" }, declineText: { color: Brand.colors.navyMuted, fontWeight: "800" }, accept: { flex: 1, backgroundColor: Brand.colors.navy, borderRadius: 12, minHeight: 48, alignItems: "center", justifyContent: "center" }, acceptText: { color: "#FFF", fontWeight: "800" }, loader: { marginTop: 24 }, close: { marginTop: 15, padding: 6 }, closeText: { color: "#806657", fontWeight: "800", fontSize: 12 },
+  backdrop: { flex: 1, justifyContent: "center", padding: 24, backgroundColor: "rgba(55, 34, 22, .62)" }, letter: { backgroundColor: "#FFF8ED", borderRadius: 24, padding: 23, alignItems: "center" }, letterPlane: { color: "#9A5A32", fontSize: 42, transform: [{ rotate: "-12deg" }] }, eyebrow: { color: "#9A5A32", fontSize: 10, letterSpacing: 1.2, fontWeight: "900", marginTop: 5 }, sender: { color: "#3E281E", fontSize: 22, fontWeight: "900", textAlign: "center", marginTop: 8 }, note: { color: "#543A2D", backgroundColor: "#F4E5D2", borderRadius: 14, padding: 14, width: "100%", textAlign: "center", fontSize: 14, lineHeight: 20, marginTop: 15 }, hint: { color: "#806657", textAlign: "center", fontSize: 12, lineHeight: 18, marginTop: 10 }, error: { color: "#B54D43", textAlign: "center", fontSize: 12, lineHeight: 17, marginTop: 10, fontWeight: "700" }, actions: { flexDirection: "row", width: "100%", gap: 10, marginTop: 20 }, decline: { flex: 1, borderWidth: 1, borderColor: Brand.colors.border, borderRadius: 12, minHeight: 48, alignItems: "center", justifyContent: "center" }, declineText: { color: Brand.colors.navyMuted, fontWeight: "800" }, accept: { flex: 1, backgroundColor: Brand.colors.navy, borderRadius: 12, minHeight: 48, alignItems: "center", justifyContent: "center" }, acceptText: { color: "#FFF", fontWeight: "800" }, loader: { marginTop: 24 }, close: { marginTop: 15, padding: 6 }, closeText: { color: "#806657", fontWeight: "800", fontSize: 12 },
 });
