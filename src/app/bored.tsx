@@ -7,6 +7,7 @@ import { Brand } from "../constants/brand";
 import { useAuth } from "../context/AuthContext";
 import { getSocket } from "../services/socket";
 import { useTheme } from "../context/ThemeContext";
+import { getWallet } from "../api/wallet";
 
 type ScreenState = "READY" | "SEARCHING" | "SENT" | "MATCHED";
 
@@ -16,6 +17,7 @@ export default function BoredScreen() {
   const [state, setState] = useState<ScreenState>("READY");
   const [loading, setLoading] = useState(false);
   const [planeMessage, setPlaneMessage] = useState("");
+  const [paisaBalance, setPaisaBalance] = useState<number | null>(null);
   const matchedRef = useRef(false);
   const flightProgress = useRef(new Animated.Value(0)).current;
 
@@ -38,6 +40,11 @@ export default function BoredScreen() {
       socket.off("match_found", handleMatch);
     };
   }, []);
+
+  useEffect(() => {
+    if (!token) return;
+    getWallet(token).then((wallet) => setPaisaBalance(wallet.balance)).catch(() => undefined);
+  }, [token]);
 
   useEffect(() => {
     if (!token || state !== "SEARCHING") return;
@@ -115,7 +122,8 @@ export default function BoredScreen() {
 
     try {
       setLoading(true);
-      await sendPaperPlane(token, message);
+      const result = await sendPaperPlane(token, message);
+      setPaisaBalance(result.wallet.balance);
       setState("SENT");
     } catch (error: any) {
       Alert.alert("Unable to send", error?.response?.data?.message || "Please try again in a moment.");
@@ -135,6 +143,7 @@ export default function BoredScreen() {
       <View style={styles.container}>
         <View style={styles.topBar}>
           <Text style={[styles.brand, { color: colors.teal }]}>BREAKROOM</Text>
+          {paisaBalance !== null && <View style={[styles.walletPill, { backgroundColor: colors.tealSoft }]}><Text style={[styles.walletPillText, { color: colors.teal }]}>Salary wallet · {paisaBalance.toLocaleString("en-IN")} Paisa</Text></View>}
         </View>
 
         <View style={styles.content}>
@@ -166,7 +175,7 @@ export default function BoredScreen() {
             ) : (
               <>
                 <TextInput value={planeMessage} onChangeText={setPlaneMessage} maxLength={160} multiline placeholder="Example: Coffee break? Tell me one good thing from your day." placeholderTextColor={colors.muted} style={[styles.planeInput, { borderColor: colors.border, backgroundColor: colors.surfaceSoft, color: colors.text }]} />
-                <View style={styles.composerFooter}><Text style={[styles.counter, { color: colors.muted }]}>{planeMessage.length}/160</Text><Text style={[styles.skyText, { color: colors.teal }]}>Sent to one open desk</Text></View>
+                <View style={styles.composerFooter}><Text style={[styles.counter, { color: colors.muted }]}>{planeMessage.length}/160</Text><Text style={[styles.skyText, { color: colors.teal }]}>10 Paisa · sent to one open desk</Text></View>
                 <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.navy }]} onPress={handleSendPaperPlane} disabled={loading}>
                   <Text style={styles.primaryButtonText}>{loading ? "Sending…" : "Send paper plane"}</Text><Text style={[styles.arrow, { color: colors.mint }]}>↗</Text>
                 </TouchableOpacity>
@@ -184,7 +193,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Brand.colors.canvas },
   container: { flex: 1, paddingHorizontal: 22 },
   loadingScreen: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Brand.colors.canvas },
-  topBar: { alignItems: "center", paddingTop: 16 },
+  topBar: { alignItems: "center", paddingTop: 16 }, walletPill: { marginTop: 9, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5 }, walletPillText: { fontSize: 10, fontWeight: "900" },
   brand: { color: Brand.colors.teal, fontSize: 11, fontWeight: "800", letterSpacing: 1.5 },
   content: { flex: 1, justifyContent: "center", paddingBottom: 20 },
   stepRow: { flexDirection: "row", alignItems: "center", alignSelf: "center", marginBottom: 25 },

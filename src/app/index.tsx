@@ -28,9 +28,10 @@ import { useTheme } from "../context/ThemeContext";
 import { DeskPlanes } from "../components/PaperPlaneInbox";
 import { DeskNotesTicker } from "../components/DeskNotesTicker";
 import { getDeskQuote } from "../api/desk";
+import { getWallet } from "../api/wallet";
 
 export default function HomeScreen() {
-  const { user, loading, loginWithGoogle, logout } = useAuth();
+  const { user, token, loading, loginWithGoogle, logout } = useAuth();
   const { t } = useLanguage();
   const { colors } = useTheme();
 
@@ -57,7 +58,7 @@ export default function HomeScreen() {
     );
   }
 
-  return <FocusedHome username={user.anonymousUsername} colors={colors} onLogout={logout} />;
+  return <FocusedHome username={user.anonymousUsername} token={token} colors={colors} onLogout={logout} />;
 
   function handleGettingBored() {
     router.push("/bored");
@@ -133,12 +134,15 @@ export default function HomeScreen() {
   );
 }
 
-function FocusedHome({ username, colors, onLogout }: { username: string; colors: any; onLogout: () => Promise<void> }) {
+function FocusedHome({ username, token, colors, onLogout }: { username: string; token: string | null; colors: any; onLogout: () => Promise<void> }) {
   const [quote, setQuote] = useState({ text: "Small progress is still progress.", author: "Breakroom" });
+  const [wallet, setWallet] = useState<{ balance: number; paperPlaneCost: number } | null>(null);
   useEffect(() => { getDeskQuote().then(setQuote).catch(() => undefined); }, []);
+  useEffect(() => { if (token) getWallet(token).then(setWallet).catch(() => undefined); }, [token]);
   return <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.canvas }]}><ScrollView contentContainerStyle={styles.focusedContent}>
     <View style={styles.focusedHeader}><View><Text style={[styles.brand, { color: colors.teal }]}>BREAKROOM</Text><Text style={[styles.focusedTitle, { color: colors.navy }]}>Your desk, {username}</Text><Text style={[styles.focusedSub, { color: colors.muted }]}>Paper Planes land here when someone wants to connect.</Text></View><TouchableOpacity onPress={onLogout}><Text style={[styles.logoutText, { color: colors.muted }]}>Sign out</Text></TouchableOpacity></View>
     <View style={[styles.deskScene, { backgroundColor: colors.hero }]}><Text style={styles.window}>☕     ▣</Text><LiveLaptop /><Text style={styles.pen}>╱</Text><DeskNotepad colors={colors} quote={quote} /><View style={styles.waterBottle}><View style={styles.bottleCap} /><View style={styles.bottleLabel}><Text style={styles.bottleLabelText}>H₂O</Text></View></View><View style={styles.headphones}><View style={styles.headphoneBand} /><View style={[styles.headphoneCup, styles.headphoneCupLeft]} /><View style={[styles.headphoneCup, styles.headphoneCupRight]} /></View><View style={styles.photoFrame}><Text style={styles.photo}>☕</Text></View><View style={[styles.deskTop, { backgroundColor: colors.mint }]} /><DeskPlanes /><Text style={styles.deskCaption}>Tap a landed Paper Plane to read it.</Text><TouchableOpacity onPress={() => router.push("/bored" as any)} style={[styles.sendPlaneButton, { backgroundColor: colors.mint }]}><Text style={[styles.sendPlaneText, { color: colors.onAccent }]}>Send a Paper Plane</Text></TouchableOpacity></View>
+    {wallet && <View style={[styles.walletCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={styles.walletIcon}><Text style={styles.walletIconText}>₹</Text></View><View style={styles.walletCopy}><Text style={[styles.walletEyebrow, { color: colors.teal }]}>SALARY WALLET</Text><Text style={[styles.walletBalance, { color: colors.text }]}>{wallet.balance.toLocaleString("en-IN")} Paisa</Text><Text style={[styles.walletHint, { color: colors.muted }]}>A Paper Plane costs {wallet.paperPlaneCost} Paisa.</Text></View></View>}
     <DeskNotesTicker />
     <View style={[styles.workThoughtCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.workThoughtLabel, { color: colors.teal }]}>WORK THOUGHT</Text><Text style={[styles.workThoughtText, { color: colors.text }]}>“{quote.text}”</Text><Text style={[styles.workThoughtAuthor, { color: colors.muted }]}>— {quote.author}</Text></View>
     <TouchableOpacity onPress={() => router.push("/account")} style={styles.accountLink}><Text style={[styles.accountLinkText, { color: colors.muted }]}>Account & privacy →</Text></TouchableOpacity>
@@ -251,7 +255,7 @@ const styles = StyleSheet.create({
     paddingTop: 28,
     paddingBottom: 32,
   },
-  focusedContent: { padding: 22, paddingTop: 32, paddingBottom: 36 }, focusedHeader: { flexDirection: "row", justifyContent: "space-between", gap: 14 }, focusedTitle: { fontSize: 27, fontWeight: "900" }, focusedSub: { fontSize: 14, lineHeight: 20, marginTop: 6, maxWidth: 270 }, deskScene: { borderRadius: 24, marginTop: 28, padding: 20, minHeight: 338, overflow: "hidden", position: "relative" }, window: { color: "#FFE7C4", fontSize: 24, textAlign: "right" }, laptop: { position: "absolute", left: 22, top: 68, width: 100, height: 62, backgroundColor: "#3B2B25", borderWidth: 5, borderColor: "#5D4338", borderRadius: 7, justifyContent: "center", alignItems: "center", zIndex: 2 }, laptopScreen: { color: "#D7B381", fontSize: 9, fontWeight: "900", letterSpacing: .7 }, pen: { position: "absolute", right: 91, top: 166, color: "#FFD269", fontSize: 36, zIndex: 2 }, notepad: { position: "absolute", right: 22, top: 112, backgroundColor: "#F8E7CC", height: 79, width: 89, borderRadius: 4, zIndex: 2, padding: 8, shadowColor: "#1C0D08", shadowOpacity: .25, shadowRadius: 4, elevation: 3 }, notepadLine: { color: "#9A7053", fontSize: 7, fontWeight: "900", letterSpacing: .25 }, quoteText: { color: "#523A2C", fontSize: 8, lineHeight: 11, fontWeight: "700", marginTop: 5 }, quoteAuthor: { fontSize: 6, fontWeight: "900", marginTop: 4 }, photoFrame: { position: "absolute", left: 136, top: 176, height: 43, width: 36, backgroundColor: "#E7C190", borderWidth: 4, borderColor: "#684635", alignItems: "center", justifyContent: "center", zIndex: 2 }, photo: { fontSize: 18 }, deskTop: { height: 116, borderRadius: 10, marginTop: 173, opacity: .9 }, deskCaption: { color: "#F5D9BB", fontSize: 13, marginTop: 13 }, sendPlaneButton: { padding: 14, borderRadius: 12, marginTop: 16, alignItems: "center" }, sendPlaneText: { fontWeight: "900" }, focusedGrid: { flexDirection: "row", gap: 12, marginTop: 14 }, focusedTile: { flex: 1, minHeight: 145, borderWidth: 1, borderRadius: 18, padding: 16 }, tileIcon: { fontSize: 21, fontWeight: "900" }, tileTitle: { fontSize: 16, fontWeight: "900", marginTop: 16 }, tileText: { fontSize: 12, lineHeight: 18, marginTop: 5 }, accountLink: { alignSelf: "center", padding: 18, marginTop: 14 }, accountLinkText: { fontWeight: "800", fontSize: 13 },
+  focusedContent: { padding: 22, paddingTop: 32, paddingBottom: 36 }, focusedHeader: { flexDirection: "row", justifyContent: "space-between", gap: 14 }, focusedTitle: { fontSize: 27, fontWeight: "900" }, focusedSub: { fontSize: 14, lineHeight: 20, marginTop: 6, maxWidth: 270 }, deskScene: { borderRadius: 24, marginTop: 28, padding: 20, minHeight: 338, overflow: "hidden", position: "relative" }, window: { color: "#FFE7C4", fontSize: 24, textAlign: "right" }, laptop: { position: "absolute", left: 22, top: 68, width: 100, height: 62, backgroundColor: "#3B2B25", borderWidth: 5, borderColor: "#5D4338", borderRadius: 7, justifyContent: "center", alignItems: "center", zIndex: 2 }, laptopScreen: { color: "#D7B381", fontSize: 9, fontWeight: "900", letterSpacing: .7 }, pen: { position: "absolute", right: 118, top: 166, color: "#FFD269", fontSize: 36, zIndex: 2 }, notepad: { position: "absolute", right: 22, top: 112, backgroundColor: "#F8E7CC", height: 79, width: 89, borderRadius: 4, zIndex: 2, padding: 8, shadowColor: "#1C0D08", shadowOpacity: .25, shadowRadius: 4, elevation: 3 }, notepadLine: { color: "#9A7053", fontSize: 7, fontWeight: "900", letterSpacing: .25 }, quoteText: { color: "#523A2C", fontSize: 8, lineHeight: 11, fontWeight: "700", marginTop: 5 }, quoteAuthor: { fontSize: 6, fontWeight: "900", marginTop: 4 }, photoFrame: { position: "absolute", left: 136, top: 176, height: 43, width: 36, backgroundColor: "#E7C190", borderWidth: 4, borderColor: "#684635", alignItems: "center", justifyContent: "center", zIndex: 2 }, photo: { fontSize: 18 }, deskTop: { height: 116, borderRadius: 10, marginTop: 173, opacity: .9 }, deskCaption: { color: "#F5D9BB", fontSize: 13, marginTop: 13 }, sendPlaneButton: { padding: 14, borderRadius: 12, marginTop: 16, alignItems: "center" }, sendPlaneText: { fontWeight: "900" }, focusedGrid: { flexDirection: "row", gap: 12, marginTop: 14 }, focusedTile: { flex: 1, minHeight: 145, borderWidth: 1, borderRadius: 18, padding: 16 }, tileIcon: { fontSize: 21, fontWeight: "900" }, tileTitle: { fontSize: 16, fontWeight: "900", marginTop: 16 }, tileText: { fontSize: 12, lineHeight: 18, marginTop: 5 }, accountLink: { alignSelf: "center", padding: 18, marginTop: 14 }, accountLinkText: { fontWeight: "800", fontSize: 13 },
 
   loading: {
     flex: 1,
@@ -472,7 +476,7 @@ const styles = StyleSheet.create({
   wallpaperOrbA: { position: "absolute", width: 76, height: 76, borderRadius: 38, backgroundColor: "#FE826B", top: -31, left: -14 },
   wallpaperOrbB: { position: "absolute", width: 92, height: 92, borderRadius: 46, backgroundColor: "#6856C8", right: -38, bottom: -43 },
   laptopBase: { position: "absolute", left: -10, right: -10, height: 7, bottom: -10, borderRadius: 6, backgroundColor: "#A9A8AC", borderWidth: 1, borderColor: "#D5D3D8" },
-  waterBottle: { position: "absolute", left: 140, top: 172, width: 22, height: 56, borderRadius: 8, borderWidth: 2, borderColor: "#9AC8D4", backgroundColor: "#75BFD1", zIndex: 2, overflow: "visible" },
+  waterBottle: { position: "absolute", right: 74, top: 174, width: 22, height: 56, borderRadius: 8, borderWidth: 2, borderColor: "#9AC8D4", backgroundColor: "#75BFD1", zIndex: 2, overflow: "visible" },
   bottleCap: { position: "absolute", width: 13, height: 7, backgroundColor: "#E5EEF0", borderRadius: 3, top: -8, left: 3 },
   bottleLabel: { position: "absolute", left: 1, right: 1, top: 23, height: 14, justifyContent: "center", alignItems: "center", backgroundColor: "#EAF8FA" },
   bottleLabelText: { color: "#37778B", fontSize: 6, fontWeight: "900" },
@@ -484,4 +488,8 @@ const styles = StyleSheet.create({
   workThoughtLabel: { fontSize: 10, letterSpacing: 1.1, fontWeight: "900" },
   workThoughtText: { fontSize: 15, lineHeight: 22, fontWeight: "700", marginTop: 8 },
   workThoughtAuthor: { fontSize: 12, fontWeight: "800", marginTop: 8 },
+  walletCard: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 16, padding: 14, marginTop: 14 },
+  walletIcon: { height: 42, width: 42, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: "#F5DD8C" },
+  walletIconText: { color: "#6D4A06", fontSize: 20, fontWeight: "900" },
+  walletCopy: { marginLeft: 12, flex: 1 }, walletEyebrow: { fontSize: 10, fontWeight: "900", letterSpacing: 1 }, walletBalance: { fontSize: 19, fontWeight: "900", marginTop: 2 }, walletHint: { fontSize: 11, marginTop: 2 },
 });
