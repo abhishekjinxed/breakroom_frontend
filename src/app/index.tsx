@@ -19,13 +19,15 @@ import * as Google from "expo-auth-session/providers/google";
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Animated, Easing } from "react-native";
 
 WebBrowser.maybeCompleteAuthSession();
 import { Brand } from "../constants/brand";
 import { useTheme } from "../context/ThemeContext";
 import { DeskPlanes } from "../components/PaperPlaneInbox";
 import { DeskNotesTicker } from "../components/DeskNotesTicker";
+import { getDeskQuote } from "../api/desk";
 
 export default function HomeScreen() {
   const { user, loading, loginWithGoogle, logout } = useAuth();
@@ -134,10 +136,26 @@ export default function HomeScreen() {
 function FocusedHome({ username, colors, onLogout }: { username: string; colors: any; onLogout: () => Promise<void> }) {
   return <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.canvas }]}><ScrollView contentContainerStyle={styles.focusedContent}>
     <View style={styles.focusedHeader}><View><Text style={[styles.brand, { color: colors.teal }]}>BREAKROOM</Text><Text style={[styles.focusedTitle, { color: colors.navy }]}>Your desk, {username}</Text><Text style={[styles.focusedSub, { color: colors.muted }]}>Paper Planes land here when someone wants to connect.</Text></View><TouchableOpacity onPress={onLogout}><Text style={[styles.logoutText, { color: colors.muted }]}>Sign out</Text></TouchableOpacity></View>
-    <View style={[styles.deskScene, { backgroundColor: colors.hero }]}><Text style={styles.window}>☕     ▣</Text><View style={styles.laptop}><Text style={styles.laptopScreen}>BREAKROOM</Text></View><Text style={styles.pen}>╱</Text><View style={styles.notepad}><Text style={styles.notepadLine}>TODAY'S NOTES</Text></View><View style={styles.photoFrame}><Text style={styles.photo}>☕</Text></View><View style={[styles.deskTop, { backgroundColor: colors.mint }]} /><DeskPlanes /><Text style={styles.deskCaption}>Tap a landed Paper Plane to read it.</Text><TouchableOpacity onPress={() => router.push("/bored" as any)} style={[styles.sendPlaneButton, { backgroundColor: colors.mint }]}><Text style={[styles.sendPlaneText, { color: colors.onAccent }]}>Send a Paper Plane</Text></TouchableOpacity></View>
+    <View style={[styles.deskScene, { backgroundColor: colors.hero }]}><Text style={styles.window}>☕     ▣</Text><View style={styles.laptop}><Text style={styles.laptopScreen}>BREAKROOM</Text></View><Text style={styles.pen}>╱</Text><DeskNotepad colors={colors} /><View style={styles.photoFrame}><Text style={styles.photo}>☕</Text></View><View style={[styles.deskTop, { backgroundColor: colors.mint }]} /><DeskPlanes /><Text style={styles.deskCaption}>Tap a landed Paper Plane to read it.</Text><TouchableOpacity onPress={() => router.push("/bored" as any)} style={[styles.sendPlaneButton, { backgroundColor: colors.mint }]}><Text style={[styles.sendPlaneText, { color: colors.onAccent }]}>Send a Paper Plane</Text></TouchableOpacity></View>
     <DeskNotesTicker />
     <TouchableOpacity onPress={() => router.push("/account")} style={styles.accountLink}><Text style={[styles.accountLinkText, { color: colors.muted }]}>Account & privacy →</Text></TouchableOpacity>
   </ScrollView></SafeAreaView>;
+}
+
+function DeskNotepad({ colors }: { colors: any }) {
+  const motion = useRef(new Animated.Value(0)).current;
+  const [quote, setQuote] = useState({ text: "Small progress is still progress.", author: "Breakroom" });
+  useEffect(() => { getDeskQuote().then(setQuote).catch(() => undefined); }, []);
+  useEffect(() => {
+    const animation = Animated.loop(Animated.sequence([
+      Animated.timing(motion, { toValue: 1, duration: 3400, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      Animated.timing(motion, { toValue: 0, duration: 3400, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+    ]));
+    animation.start(); return () => animation.stop();
+  }, [motion]);
+  const rotate = motion.interpolate({ inputRange: [0, 1], outputRange: ["6deg", "12deg"] });
+  const translate = motion.interpolate({ inputRange: [0, 1], outputRange: [0, 6] });
+  return <Animated.View style={[styles.notepad, { transform: [{ translateX: translate }, { rotate }] }]}><Text style={styles.notepadLine}>WORK THOUGHT</Text><Text numberOfLines={3} style={styles.quoteText}>“{quote.text}”</Text><Text numberOfLines={1} style={[styles.quoteAuthor, { color: colors.violet }]}>— {quote.author}</Text></Animated.View>;
 }
 
 function GoogleLoginButton() {
@@ -217,7 +235,7 @@ const styles = StyleSheet.create({
     paddingTop: 28,
     paddingBottom: 32,
   },
-  focusedContent: { padding: 22, paddingTop: 32, paddingBottom: 36 }, focusedHeader: { flexDirection: "row", justifyContent: "space-between", gap: 14 }, focusedTitle: { fontSize: 27, fontWeight: "900" }, focusedSub: { fontSize: 14, lineHeight: 20, marginTop: 6, maxWidth: 270 }, deskScene: { borderRadius: 24, marginTop: 28, padding: 20, minHeight: 338, overflow: "hidden", position: "relative" }, window: { color: "#FFE7C4", fontSize: 24, textAlign: "right" }, laptop: { position: "absolute", left: 22, top: 68, width: 100, height: 62, backgroundColor: "#3B2B25", borderWidth: 5, borderColor: "#5D4338", borderRadius: 7, justifyContent: "center", alignItems: "center", zIndex: 2 }, laptopScreen: { color: "#D7B381", fontSize: 9, fontWeight: "900", letterSpacing: .7 }, pen: { position: "absolute", right: 91, top: 166, color: "#FFD269", fontSize: 36, zIndex: 2 }, notepad: { position: "absolute", right: 22, top: 112, backgroundColor: "#F8E7CC", height: 58, width: 76, borderRadius: 4, transform: [{ rotate: "6deg" }], zIndex: 2, padding: 8 }, notepadLine: { color: "#9A7053", fontSize: 7, fontWeight: "900" }, photoFrame: { position: "absolute", left: 136, top: 176, height: 43, width: 36, backgroundColor: "#E7C190", borderWidth: 4, borderColor: "#684635", alignItems: "center", justifyContent: "center", zIndex: 2 }, photo: { fontSize: 18 }, deskTop: { height: 116, borderRadius: 10, marginTop: 173, opacity: .9 }, deskCaption: { color: "#F5D9BB", fontSize: 13, marginTop: 13 }, sendPlaneButton: { padding: 14, borderRadius: 12, marginTop: 16, alignItems: "center" }, sendPlaneText: { fontWeight: "900" }, focusedGrid: { flexDirection: "row", gap: 12, marginTop: 14 }, focusedTile: { flex: 1, minHeight: 145, borderWidth: 1, borderRadius: 18, padding: 16 }, tileIcon: { fontSize: 21, fontWeight: "900" }, tileTitle: { fontSize: 16, fontWeight: "900", marginTop: 16 }, tileText: { fontSize: 12, lineHeight: 18, marginTop: 5 }, accountLink: { alignSelf: "center", padding: 18, marginTop: 14 }, accountLinkText: { fontWeight: "800", fontSize: 13 },
+  focusedContent: { padding: 22, paddingTop: 32, paddingBottom: 36 }, focusedHeader: { flexDirection: "row", justifyContent: "space-between", gap: 14 }, focusedTitle: { fontSize: 27, fontWeight: "900" }, focusedSub: { fontSize: 14, lineHeight: 20, marginTop: 6, maxWidth: 270 }, deskScene: { borderRadius: 24, marginTop: 28, padding: 20, minHeight: 338, overflow: "hidden", position: "relative" }, window: { color: "#FFE7C4", fontSize: 24, textAlign: "right" }, laptop: { position: "absolute", left: 22, top: 68, width: 100, height: 62, backgroundColor: "#3B2B25", borderWidth: 5, borderColor: "#5D4338", borderRadius: 7, justifyContent: "center", alignItems: "center", zIndex: 2 }, laptopScreen: { color: "#D7B381", fontSize: 9, fontWeight: "900", letterSpacing: .7 }, pen: { position: "absolute", right: 91, top: 166, color: "#FFD269", fontSize: 36, zIndex: 2 }, notepad: { position: "absolute", right: 22, top: 112, backgroundColor: "#F8E7CC", height: 79, width: 89, borderRadius: 4, zIndex: 2, padding: 8, shadowColor: "#1C0D08", shadowOpacity: .25, shadowRadius: 4, elevation: 3 }, notepadLine: { color: "#9A7053", fontSize: 7, fontWeight: "900", letterSpacing: .25 }, quoteText: { color: "#523A2C", fontSize: 8, lineHeight: 11, fontWeight: "700", marginTop: 5 }, quoteAuthor: { fontSize: 6, fontWeight: "900", marginTop: 4 }, photoFrame: { position: "absolute", left: 136, top: 176, height: 43, width: 36, backgroundColor: "#E7C190", borderWidth: 4, borderColor: "#684635", alignItems: "center", justifyContent: "center", zIndex: 2 }, photo: { fontSize: 18 }, deskTop: { height: 116, borderRadius: 10, marginTop: 173, opacity: .9 }, deskCaption: { color: "#F5D9BB", fontSize: 13, marginTop: 13 }, sendPlaneButton: { padding: 14, borderRadius: 12, marginTop: 16, alignItems: "center" }, sendPlaneText: { fontWeight: "900" }, focusedGrid: { flexDirection: "row", gap: 12, marginTop: 14 }, focusedTile: { flex: 1, minHeight: 145, borderWidth: 1, borderRadius: 18, padding: 16 }, tileIcon: { fontSize: 21, fontWeight: "900" }, tileTitle: { fontSize: 16, fontWeight: "900", marginTop: 16 }, tileText: { fontSize: 12, lineHeight: 18, marginTop: 5 }, accountLink: { alignSelf: "center", padding: 18, marginTop: 14 }, accountLinkText: { fontWeight: "800", fontSize: 13 },
 
   loading: {
     flex: 1,

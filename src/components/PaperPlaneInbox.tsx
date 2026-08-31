@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Animated, Easing, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 
 import { getPendingPaperPlanes, PaperPlaneInvite, respondToPaperPlane } from "../api/bored";
@@ -60,9 +60,7 @@ export function DeskPlanes() {
     <View style={styles.tray} pointerEvents="box-none">
       {invites.slice(0, positions.length).map((invite, index) => {
         const position = positions[index];
-        return <TouchableOpacity key={invite.id} accessibilityRole="button" accessibilityLabel="Open a landed paper plane" activeOpacity={0.78} onPress={() => setSelected(invite)} style={[styles.plane, { left: position.left, top: position.top, transform: [{ rotate: position.rotate }] }]}>
-          <Text style={styles.planeMark}>✈</Text><Text style={styles.seal}>{invite.sender.anonymousUsername.charAt(0).toUpperCase()}</Text>
-        </TouchableOpacity>;
+        return <FlyingPlane key={invite.id} invite={invite} position={position} onOpen={() => setSelected(invite)} />;
       })}
       {invites.length > 0 && <View style={styles.count}><Text style={styles.countText}>{invites.length} {invites.length === 1 ? "plane landed" : "planes landed"}</Text></View>}
     </View>
@@ -83,9 +81,21 @@ export function DeskPlanes() {
   </>;
 }
 
+function FlyingPlane({ invite, position, onOpen }: { invite: PaperPlaneInvite; position: typeof positions[number]; onOpen: () => void }) {
+  const landing = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(landing, { toValue: 1, duration: 720, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [landing]);
+  const translateX = landing.interpolate({ inputRange: [0, 1], outputRange: [95, 0] });
+  const translateY = landing.interpolate({ inputRange: [0, 1], outputRange: [-65, 0] });
+  const scale = landing.interpolate({ inputRange: [0, .8, 1], outputRange: [.65, 1.04, 1] });
+  const opacity = landing.interpolate({ inputRange: [0, .15, 1], outputRange: [0, 1, 1] });
+  return <Animated.View style={[styles.plane, { left: position.left, top: position.top, opacity, transform: [{ translateX }, { translateY }, { scale }, { rotate: position.rotate }] }]}><TouchableOpacity accessibilityRole="button" accessibilityLabel="Open a landed paper plane" activeOpacity={0.78} onPress={onOpen} style={styles.planeButton}><Text style={styles.planeMark}>✈</Text><Text style={styles.seal}>{invite.sender.anonymousUsername.charAt(0).toUpperCase()}</Text></TouchableOpacity></Animated.View>;
+}
+
 const styles = StyleSheet.create({
   tray: { position: "absolute", left: 0, right: 0, top: 36, height: 152, zIndex: 3 },
-  plane: { position: "absolute", width: 64, height: 46, borderRadius: 6, backgroundColor: "#FFF2D9", borderWidth: 1, borderColor: "#D4A979", justifyContent: "center", alignItems: "center", shadowColor: "#3C2418", shadowOpacity: 0.25, shadowRadius: 4, elevation: 4 },
+  plane: { position: "absolute", width: 64, height: 46, borderRadius: 6, backgroundColor: "#FFF2D9", borderWidth: 1, borderColor: "#D4A979", shadowColor: "#3C2418", shadowOpacity: 0.25, shadowRadius: 4, elevation: 4 }, planeButton: { flex: 1, justifyContent: "center", alignItems: "center" },
   planeMark: { fontSize: 31, color: "#9A5A32", lineHeight: 34 }, seal: { position: "absolute", right: 5, bottom: 3, height: 14, minWidth: 14, borderRadius: 7, backgroundColor: "#6E3B2A", color: "#FFF8ED", fontSize: 8, fontWeight: "900", textAlign: "center", lineHeight: 14, overflow: "hidden" },
   count: { position: "absolute", left: 18, bottom: 0, backgroundColor: "rgba(62, 40, 30, .82)", borderRadius: 10, paddingHorizontal: 9, paddingVertical: 5 }, countText: { color: "#FFF7E8", fontSize: 10, fontWeight: "900" },
   backdrop: { flex: 1, justifyContent: "center", padding: 24, backgroundColor: "rgba(55, 34, 22, .62)" }, letter: { backgroundColor: "#FFF8ED", borderRadius: 24, padding: 23, alignItems: "center" }, letterPlane: { color: "#9A5A32", fontSize: 42, transform: [{ rotate: "-12deg" }] }, eyebrow: { color: "#9A5A32", fontSize: 10, letterSpacing: 1.2, fontWeight: "900", marginTop: 5 }, sender: { color: "#3E281E", fontSize: 22, fontWeight: "900", textAlign: "center", marginTop: 8 }, note: { color: "#543A2D", backgroundColor: "#F4E5D2", borderRadius: 14, padding: 14, width: "100%", textAlign: "center", fontSize: 14, lineHeight: 20, marginTop: 15 }, hint: { color: "#806657", textAlign: "center", fontSize: 12, lineHeight: 18, marginTop: 10 }, error: { color: "#B54D43", textAlign: "center", fontSize: 12, lineHeight: 17, marginTop: 10, fontWeight: "700" }, actions: { flexDirection: "row", width: "100%", gap: 10, marginTop: 20 }, decline: { flex: 1, borderWidth: 1, borderColor: Brand.colors.border, borderRadius: 12, minHeight: 48, alignItems: "center", justifyContent: "center" }, declineText: { color: Brand.colors.navyMuted, fontWeight: "800" }, accept: { flex: 1, backgroundColor: Brand.colors.navy, borderRadius: 12, minHeight: 48, alignItems: "center", justifyContent: "center" }, acceptText: { color: "#FFF", fontWeight: "800" }, loader: { marginTop: 24 }, close: { marginTop: 15, padding: 6 }, closeText: { color: "#806657", fontWeight: "800", fontSize: 12 },

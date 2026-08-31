@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import {
   FlatList,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -18,7 +19,7 @@ import { getSocket } from "../../services/socket";
 import { leaveBored } from "../../api/bored";
 import { getChatMessages } from "../../api/chat";
 import { requestWorkCircleFromChat } from "../../api/work-circle";
-import { deleteDirectConversation, getDirectConversation, updateProfileSharing } from "../../api/inbox";
+import { deleteDirectConversation, getDirectConversation, updateChatPhotoSharing, updateProfileSharing } from "../../api/inbox";
 import { Brand } from "../../constants/brand";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -56,7 +57,7 @@ export default function ChatScreen() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [profileBusy, setProfileBusy] = useState(false);
-  const [profileSharing, setProfileSharing] = useState({ isSharingMyProfile: false, canViewMemberProfile: false, memberId: null as string | null });
+  const [profileSharing, setProfileSharing] = useState({ isSharingMyProfile: false, canViewMemberProfile: false, memberId: null as string | null, photos: [] as Array<{ id: string; url: string; visibility: "PRIVATE" | "PUBLIC"; createdAt: string; sharedWithMember: boolean }> });
 
   const inputRef = useRef<TextInput>(null);
 
@@ -283,6 +284,17 @@ export default function ChatScreen() {
     router.push(`/profile/${profileSharing.memberId}?fromChat=1` as any);
   }
 
+  async function toggleChatPhoto(photoId: string, share: boolean) {
+    if (!token || !chatId || profileBusy) return;
+    try {
+      setProfileBusy(true);
+      await updateChatPhotoSharing(token, chatId, photoId, share);
+      setProfileSharing((current) => ({ ...current, photos: current.photos.map((photo) => photo.id === photoId ? { ...photo, sharedWithMember: share } : photo) }));
+    } catch (error: any) {
+      Alert.alert("Photo sharing", error?.response?.data?.message ?? "We could not update photo sharing. Please try again.");
+    } finally { setProfileBusy(false); }
+  }
+
   function renderMessage({ item }: { item: Message }) {
     const isOwnMessage = item.senderId === user?.id;
 
@@ -423,7 +435,7 @@ export default function ChatScreen() {
         </TouchableOpacity>
       </View>
       <Modal transparent visible={deleteOpen} animationType="fade" onRequestClose={() => setDeleteOpen(false)}><View style={styles.deleteBackdrop}><View style={[styles.deleteCard, { backgroundColor: colors.surface }]}><Text style={[styles.deleteTitle, { color: colors.navy }]}>Delete conversation?</Text><Text style={[styles.deleteCopy, { color: colors.muted }]}>This removes the private chat for both people and ends the Work Circle connection.</Text>{deleteError && <Text style={styles.deleteError}>{deleteError}</Text>}<View style={styles.deleteActions}><TouchableOpacity disabled={deleting} onPress={() => setDeleteOpen(false)} style={[styles.cancelDelete, { borderColor: colors.border }]}><Text style={[styles.cancelDeleteText, { color: colors.muted }]}>Cancel</Text></TouchableOpacity><TouchableOpacity disabled={deleting} onPress={deleteConversation} style={styles.confirmDelete}><Text style={styles.confirmDeleteText}>{deleting ? "Deleting…" : "Delete"}</Text></TouchableOpacity></View></View></View></Modal>
-      <Modal transparent visible={optionsOpen} animationType="fade" onRequestClose={() => setOptionsOpen(false)}><View style={styles.deleteBackdrop}><View style={[styles.deleteCard, { backgroundColor: colors.surface }]}><Text style={[styles.deleteTitle, { color: colors.navy }]}>Conversation options</Text><Text style={[styles.deleteCopy, { color: colors.muted }]}>Profiles are private unless each person chooses to share theirs in this chat.</Text><TouchableOpacity disabled={profileBusy} onPress={toggleProfileSharing} style={[styles.optionAction, { borderColor: colors.border }]}><Text style={[styles.optionActionText, { color: colors.text }]}>{profileBusy ? "Saving…" : profileSharing.isSharingMyProfile ? "Stop sharing my profile" : "Share my profile"}</Text><Text style={[styles.optionHint, { color: colors.muted }]}>{profileSharing.isSharingMyProfile ? "The other person can now open your profile." : "Only the other person in this chat can view it."}</Text></TouchableOpacity>{profileSharing.canViewMemberProfile && <TouchableOpacity onPress={() => { setOptionsOpen(false); openMemberProfile(); }} style={[styles.optionAction, { borderColor: colors.border }]}><Text style={[styles.optionActionText, { color: colors.teal }]}>View their profile</Text></TouchableOpacity>}<TouchableOpacity onPress={() => { setOptionsOpen(false); confirmDeleteConversation(); }} style={[styles.optionAction, { borderColor: colors.border }]}><Text style={styles.deleteLinkText}>Delete conversation</Text></TouchableOpacity><TouchableOpacity onPress={() => setOptionsOpen(false)} style={styles.closeOptions}><Text style={[styles.cancelDeleteText, { color: colors.muted }]}>Cancel</Text></TouchableOpacity></View></View></Modal>
+      <Modal transparent visible={optionsOpen} animationType="fade" onRequestClose={() => setOptionsOpen(false)}><View style={styles.deleteBackdrop}><View style={[styles.deleteCard, { backgroundColor: colors.surface }]}><Text style={[styles.deleteTitle, { color: colors.navy }]}>Conversation options</Text><Text style={[styles.deleteCopy, { color: colors.muted }]}>Profiles are private unless each person chooses to share theirs in this chat.</Text><TouchableOpacity disabled={profileBusy} onPress={toggleProfileSharing} style={[styles.optionAction, { borderColor: colors.border }]}><Text style={[styles.optionActionText, { color: colors.text }]}>{profileBusy ? "Saving…" : profileSharing.isSharingMyProfile ? "Stop sharing my profile" : "Share my profile"}</Text><Text style={[styles.optionHint, { color: colors.muted }]}>{profileSharing.isSharingMyProfile ? "The other person can now open your profile." : "Only the other person in this chat can view it."}</Text></TouchableOpacity>{profileSharing.photos.length > 0 && <View style={[styles.photoShareSection, { borderColor: colors.border }]}><Text style={[styles.photoShareTitle, { color: colors.text }]}>Share photos with this person</Text><Text style={[styles.optionHint, { color: colors.muted }]}>Public photos are visible to everyone. Turn on a private photo to share only here.</Text><View style={styles.chatPhotos}>{profileSharing.photos.map((photo) => <TouchableOpacity key={photo.id} disabled={profileBusy} onPress={() => toggleChatPhoto(photo.id, !photo.sharedWithMember)} style={[styles.chatPhotoTile, { borderColor: photo.sharedWithMember ? colors.teal : colors.border }]}><Image source={{ uri: photo.url }} style={styles.chatPhoto} /><Text style={[styles.chatPhotoLabel, { color: photo.sharedWithMember ? colors.teal : colors.muted }]}>{photo.visibility === "PUBLIC" ? "Public" : photo.sharedWithMember ? "Shared here" : "Private"}</Text></TouchableOpacity>)}</View></View>}{profileSharing.canViewMemberProfile && <TouchableOpacity onPress={() => { setOptionsOpen(false); openMemberProfile(); }} style={[styles.optionAction, { borderColor: colors.border }]}><Text style={[styles.optionActionText, { color: colors.teal }]}>View their profile</Text></TouchableOpacity>}<TouchableOpacity onPress={() => { setOptionsOpen(false); confirmDeleteConversation(); }} style={[styles.optionAction, { borderColor: colors.border }]}><Text style={styles.deleteLinkText}>Delete conversation</Text></TouchableOpacity><TouchableOpacity onPress={() => setOptionsOpen(false)} style={styles.closeOptions}><Text style={[styles.cancelDeleteText, { color: colors.muted }]}>Cancel</Text></TouchableOpacity></View></View></Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -596,6 +608,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
   },
-  optionAction: { borderWidth: 1, borderRadius: 12, padding: 14, marginTop: 13 }, optionActionText: { fontWeight: "900", fontSize: 14 }, optionHint: { fontSize: 12, lineHeight: 17, marginTop: 4 }, closeOptions: { alignItems: "center", padding: 14, marginTop: 4 },
+  optionAction: { borderWidth: 1, borderRadius: 12, padding: 14, marginTop: 13 }, optionActionText: { fontWeight: "900", fontSize: 14 }, optionHint: { fontSize: 12, lineHeight: 17, marginTop: 4 }, photoShareSection: { borderTopWidth: 1, marginTop: 15, paddingTop: 15 }, photoShareTitle: { fontWeight: "900", fontSize: 14 }, chatPhotos: { flexDirection: "row", gap: 10, marginTop: 10 }, chatPhotoTile: { width: 78, borderWidth: 2, borderRadius: 10, overflow: "hidden", paddingBottom: 6 }, chatPhoto: { width: 74, height: 72, backgroundColor: Brand.colors.border }, chatPhotoLabel: { fontSize: 10, fontWeight: "900", textAlign: "center", marginTop: 5 }, closeOptions: { alignItems: "center", padding: 14, marginTop: 4 },
   deleteBackdrop: { flex: 1, justifyContent: "center", padding: 24, backgroundColor: "rgba(42, 28, 21, .56)" }, deleteCard: { borderRadius: 20, padding: 22 }, deleteTitle: { fontSize: 21, fontWeight: "900" }, deleteCopy: { fontSize: 14, lineHeight: 20, marginTop: 9 }, deleteError: { color: Brand.colors.danger, fontSize: 12, lineHeight: 18, marginTop: 12 }, deleteActions: { flexDirection: "row", gap: 10, marginTop: 22 }, cancelDelete: { flex: 1, minHeight: 46, borderWidth: 1, borderRadius: 12, alignItems: "center", justifyContent: "center" }, cancelDeleteText: { fontWeight: "800" }, confirmDelete: { flex: 1, minHeight: 46, borderRadius: 12, backgroundColor: Brand.colors.danger, alignItems: "center", justifyContent: "center" }, confirmDeleteText: { color: "#FFF", fontWeight: "900" },
 });
