@@ -39,7 +39,10 @@ export function DeskPlanes() {
       const result = await respondToPaperPlane(token, invite.id, accept);
       setInvites((current) => current.filter((item) => item.id !== invite.id));
       setSelected(null);
-      if (result.accepted && result.chatId) router.push({ pathname: "/chat/[chatId]", params: { chatId: result.chatId, direct: "1" } });
+      // An accepted plane creates a persistent private conversation. Take the
+      // recipient to Inbox so the new thread is visible alongside the rest
+      // of their conversations instead of opening a one-off chat screen.
+      if (result.accepted && result.chatId) router.replace("/inbox" as any);
     } catch (error: any) {
       setInvites((current) => current.filter((item) => item.id !== invite.id));
       setSelected(null);
