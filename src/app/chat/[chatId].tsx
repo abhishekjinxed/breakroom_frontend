@@ -5,6 +5,7 @@ import {
   FlatList,
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   StyleSheet,
   Text,
@@ -50,6 +51,9 @@ export default function ChatScreen() {
   const [chatError, setChatError] = useState<string | null>(null);
 
   const [sending, setSending] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const inputRef = useRef<TextInput>(null);
 
@@ -225,10 +229,15 @@ export default function ChatScreen() {
 
   function confirmDeleteConversation() {
     if (!token || !chatId) return;
-    Alert.alert("Delete this conversation?", "Deleting this chat will also remove this person from your friends. You will need to send a new request to connect again.", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete & Remove Friend", style: "destructive", onPress: async () => { try { const result = await deleteDirectConversation(token, chatId); if (!result.removed) throw new Error("Conversation is no longer available"); router.replace("/inbox" as any); } catch { Alert.alert("Couldn’t delete conversation", "Please refresh the Inbox and try again."); } } },
-    ]);
+    setDeleteError(null);
+    setDeleteOpen(true);
+  }
+
+  async function deleteConversation() {
+    if (!token || !chatId || deleting) return;
+    try { setDeleting(true); const result = await deleteDirectConversation(token, chatId); if (!result.removed) throw new Error("Conversation is no longer available"); setDeleteOpen(false); router.replace("/inbox" as any); }
+    catch (error: any) { setDeleteError(error?.response?.data?.message || "Could not delete this conversation. Please try again."); }
+    finally { setDeleting(false); }
   }
 
   function renderMessage({ item }: { item: Message }) {
@@ -370,6 +379,7 @@ export default function ChatScreen() {
           <Text style={styles.sendText}>↑</Text>
         </TouchableOpacity>
       </View>
+      <Modal transparent visible={deleteOpen} animationType="fade" onRequestClose={() => setDeleteOpen(false)}><View style={styles.deleteBackdrop}><View style={[styles.deleteCard, { backgroundColor: colors.surface }]}><Text style={[styles.deleteTitle, { color: colors.navy }]}>Delete conversation?</Text><Text style={[styles.deleteCopy, { color: colors.muted }]}>This removes the private chat for both people and ends the Work Circle connection.</Text>{deleteError && <Text style={styles.deleteError}>{deleteError}</Text>}<View style={styles.deleteActions}><TouchableOpacity disabled={deleting} onPress={() => setDeleteOpen(false)} style={[styles.cancelDelete, { borderColor: colors.border }]}><Text style={[styles.cancelDeleteText, { color: colors.muted }]}>Cancel</Text></TouchableOpacity><TouchableOpacity disabled={deleting} onPress={deleteConversation} style={styles.confirmDelete}><Text style={styles.confirmDeleteText}>{deleting ? "Deleting…" : "Delete"}</Text></TouchableOpacity></View></View></View></Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -542,4 +552,5 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
   },
+  deleteBackdrop: { flex: 1, justifyContent: "center", padding: 24, backgroundColor: "rgba(42, 28, 21, .56)" }, deleteCard: { borderRadius: 20, padding: 22 }, deleteTitle: { fontSize: 21, fontWeight: "900" }, deleteCopy: { fontSize: 14, lineHeight: 20, marginTop: 9 }, deleteError: { color: Brand.colors.danger, fontSize: 12, lineHeight: 18, marginTop: 12 }, deleteActions: { flexDirection: "row", gap: 10, marginTop: 22 }, cancelDelete: { flex: 1, minHeight: 46, borderWidth: 1, borderRadius: 12, alignItems: "center", justifyContent: "center" }, cancelDeleteText: { fontWeight: "800" }, confirmDelete: { flex: 1, minHeight: 46, borderRadius: 12, backgroundColor: Brand.colors.danger, alignItems: "center", justifyContent: "center" }, confirmDeleteText: { color: "#FFF", fontWeight: "900" },
 });
