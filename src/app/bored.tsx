@@ -170,9 +170,6 @@ export default function BoredScreen() {
                 <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.navy }]} onPress={handleSendPaperPlane} disabled={loading}>
                   <Text style={styles.primaryButtonText}>{loading ? "Sending…" : "Send paper plane"}</Text><Text style={[styles.arrow, { color: colors.mint }]}>↗</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.quickMatchButton} onPress={handleFindSomeone} disabled={loading}>
-                  <Text style={[styles.quickMatchText, { color: colors.teal }]}>Or match me now</Text>
-                </TouchableOpacity>
               </>
             )}
           </View>
