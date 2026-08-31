@@ -49,7 +49,9 @@ export function DeskPlanes() {
       // Keep the plane on the desk when Accept fails. Previously it was
       // removed and a browser-only alert was easy to miss, making a failed
       // request look like a successful acceptance.
-      setResponseError(error?.response?.data?.message || error?.message || "We could not accept this Paper Plane. Please try again.");
+      const message = error?.response?.data?.message || error?.message || "We could not accept this Paper Plane. Please try again.";
+      const code = error?.response?.data?.errorCode;
+      setResponseError(code ? `${message} (${code})` : message);
     } finally { setResponding(false); }
   }
 
