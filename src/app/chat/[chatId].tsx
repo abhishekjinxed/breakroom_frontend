@@ -20,6 +20,7 @@ import { requestWorkCircleFromChat } from "../../api/work-circle";
 import { deleteDirectConversation, getDirectMessages } from "../../api/inbox";
 import { Brand } from "../../constants/brand";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 
 interface Message {
   id: string;
@@ -31,6 +32,7 @@ interface Message {
 
 export default function ChatScreen() {
   const { token, user } = useAuth();
+  const { colors } = useTheme();
   const { chatId, direct } = useLocalSearchParams<{
     chatId: string;
     direct?: string;
@@ -225,7 +227,7 @@ export default function ChatScreen() {
     if (!token || !chatId) return;
     Alert.alert("Delete this conversation?", "Deleting this chat will also remove this person from your friends. You will need to send a new request to connect again.", [
       { text: "Cancel", style: "cancel" },
-      { text: "Delete & Remove Friend", style: "destructive", onPress: async () => { try { await deleteDirectConversation(token, chatId); router.replace("/inbox" as any); } catch { Alert.alert("Couldn’t delete conversation", "Please try again."); } } },
+      { text: "Delete & Remove Friend", style: "destructive", onPress: async () => { try { const result = await deleteDirectConversation(token, chatId); if (!result.removed) throw new Error("Conversation is no longer available"); router.replace("/inbox" as any); } catch { Alert.alert("Couldn’t delete conversation", "Please refresh the Inbox and try again."); } } },
     ]);
   }
 
@@ -260,22 +262,22 @@ export default function ChatScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.canvas }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={0}
     >
       {/* HEADER */}
 
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           onPress={handleLeaveChat}
           style={styles.backButton}
         >
-          <Text style={styles.leaveText}>{isDirect ? "Back" : "Leave chat"}</Text>
+          <Text style={[styles.leaveText, { color: isDirect ? colors.teal : Brand.colors.danger }]}>{isDirect ? "Back" : "Leave chat"}</Text>
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
-          <Text style={styles.username}>{isDirect ? "Work Circle" : "Breakroom chat"}</Text>
+          <Text style={[styles.username, { color: colors.navy }]}>{isDirect ? "Work Circle" : "Breakroom chat"}</Text>
 
           <Text
             style={[
@@ -330,10 +332,10 @@ export default function ChatScreen() {
 
       {/* INPUT */}
 
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
         <TextInput
           ref={inputRef}
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.tealSoft, color: colors.text }]}
           value={text}
           onChangeText={setText}
           placeholder="Type a message..."

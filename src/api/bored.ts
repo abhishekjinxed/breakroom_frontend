@@ -69,8 +69,8 @@ export async function sendPaperPlane(token: string, message: string) {
   return (await api.post("/api/bored/paper-plane", { message }, auth(token))).data as { success: true; invite: Pick<PaperPlaneInvite, "id" | "message" | "expiresAt"> };
 }
 
-export async function getPendingPaperPlane(token: string) {
-  return (await api.get("/api/bored/paper-plane", auth(token))).data as { success: true; invite: PaperPlaneInvite | null };
+export async function getPendingPaperPlanes(token: string) {
+  return (await api.get("/api/bored/paper-plane", auth(token))).data as { success: true; invites: PaperPlaneInvite[] };
 }
 
 export async function respondToPaperPlane(token: string, inviteId: string, accept: boolean) {
