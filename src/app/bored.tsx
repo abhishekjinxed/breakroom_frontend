@@ -6,11 +6,13 @@ import { joinBored, sendPaperPlane, stopLooking } from "../api/bored";
 import { Brand } from "../constants/brand";
 import { useAuth } from "../context/AuthContext";
 import { getSocket } from "../services/socket";
+import { useTheme } from "../context/ThemeContext";
 
 type ScreenState = "READY" | "SEARCHING" | "SENT" | "MATCHED";
 
 export default function BoredScreen() {
   const { user, token } = useAuth();
+  const { colors } = useTheme();
   const [state, setState] = useState<ScreenState>("READY");
   const [loading, setLoading] = useState(false);
   const [planeMessage, setPlaneMessage] = useState("");
@@ -123,58 +125,58 @@ export default function BoredScreen() {
   }
 
   if (!user) {
-    return <View style={styles.loadingScreen}><ActivityIndicator color={Brand.colors.teal} size="large" /></View>;
+    return <View style={[styles.loadingScreen, { backgroundColor: colors.canvas }]}><ActivityIndicator color={colors.teal} size="large" /></View>;
   }
 
   const isSearching = state === "SEARCHING";
   const planeIsFlying = state === "SENT";
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.canvas }]}>
       <View style={styles.container}>
         <View style={styles.topBar}>
-          <Text style={styles.brand}>BREAKROOM</Text>
+          <Text style={[styles.brand, { color: colors.teal }]}>BREAKROOM</Text>
         </View>
 
         <View style={styles.content}>
           <View style={styles.stepRow}>
-            <View style={styles.stepActive} /><View style={styles.stepLine} />
-            <View style={isSearching || planeIsFlying ? styles.stepActive : styles.stepIdle} /><View style={styles.stepLine} />
-            <View style={planeIsFlying ? styles.stepActive : styles.stepIdle} />
+            <View style={[styles.stepActive, { backgroundColor: colors.teal }]} /><View style={[styles.stepLine, { backgroundColor: colors.border }]} />
+            <View style={[isSearching || planeIsFlying ? styles.stepActive : styles.stepIdle, { backgroundColor: isSearching || planeIsFlying ? colors.teal : colors.border }]} /><View style={[styles.stepLine, { backgroundColor: colors.border }]} />
+            <View style={[planeIsFlying ? styles.stepActive : styles.stepIdle, { backgroundColor: planeIsFlying ? colors.teal : colors.border }]} />
           </View>
-          <View style={styles.matchCard}>
+          <View style={[styles.matchCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             {planeIsFlying && <View style={styles.flightLane}>
-              <Animated.Text style={[styles.flyingPlane, { transform: [{ translateX: flightProgress.interpolate({ inputRange: [0, 1], outputRange: [-100, 230] }) }, { translateY: flightProgress.interpolate({ inputRange: [0, 0.5, 1], outputRange: [7, -8, 5] }) }, { rotate: "-18deg" }] }]}>✈</Animated.Text>
+              <Animated.Text style={[styles.flyingPlane, { color: colors.teal, transform: [{ translateX: flightProgress.interpolate({ inputRange: [0, 1], outputRange: [-100, 230] }) }, { translateY: flightProgress.interpolate({ inputRange: [0, 0.5, 1], outputRange: [7, -8, 5] }) }, { rotate: "-18deg" }] }]}>✈</Animated.Text>
             </View>}
-            <View style={styles.iconTile}>
-              {isSearching ? <ActivityIndicator color={Brand.colors.teal} /> : <Text style={styles.iconText}>{planeIsFlying ? "⌁" : "✈"}</Text>}
+            <View style={[styles.iconTile, { backgroundColor: colors.tealSoft }]}>
+              {isSearching ? <ActivityIndicator color={colors.teal} /> : <Text style={[styles.iconText, { color: colors.teal }]}>{planeIsFlying ? "⌁" : "✈"}</Text>}
             </View>
-            <Text style={styles.eyebrow}>{isSearching ? "MATCHING IN PROGRESS" : planeIsFlying ? "PAPER PLANE IN FLIGHT" : "WORKDAY BREAK"}</Text>
-            <Text style={styles.title}>{isSearching ? "Looking for a break partner" : planeIsFlying ? "Your note is looking for a desk" : "Send a paper plane"}</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.eyebrow, { color: colors.teal }]}>{isSearching ? "MATCHING IN PROGRESS" : planeIsFlying ? "PAPER PLANE IN FLIGHT" : "WORKDAY BREAK"}</Text>
+            <Text style={[styles.title, { color: colors.navy }]}>{isSearching ? "Looking for a break partner" : planeIsFlying ? "Your note is looking for a desk" : "Send a paper plane"}</Text>
+            <Text style={[styles.subtitle, { color: colors.muted }]}>
               {isSearching ? "We’ll connect you when another professional is ready for a quick conversation." : planeIsFlying ? "When someone opens your note and accepts, your break chat will begin." : "Write a short invitation. We’ll send it to one available colleague in the Breakroom."}
             </Text>
             {isSearching ? (
-              <TouchableOpacity style={styles.secondaryButton} onPress={handleStopLooking} disabled={loading}>
-                <Text style={styles.secondaryButtonText}>Cancel search</Text>
+              <TouchableOpacity style={[styles.secondaryButton, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handleStopLooking} disabled={loading}>
+                <Text style={[styles.secondaryButtonText, { color: colors.danger }]}>Cancel search</Text>
               </TouchableOpacity>
             ) : planeIsFlying ? (
-              <TouchableOpacity style={styles.secondaryButton} onPress={() => { setPlaneMessage(""); setState("READY"); }} disabled={loading}>
-                <Text style={styles.secondaryButtonText}>Write another plane</Text>
+              <TouchableOpacity style={[styles.secondaryButton, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => { setPlaneMessage(""); setState("READY"); }} disabled={loading}>
+                <Text style={[styles.secondaryButtonText, { color: colors.danger }]}>Write another plane</Text>
               </TouchableOpacity>
             ) : (
               <>
-                <TextInput value={planeMessage} onChangeText={setPlaneMessage} maxLength={160} multiline placeholder="Example: Coffee break? Tell me one good thing from your day." placeholderTextColor={Brand.colors.muted} style={styles.planeInput} />
-                <View style={styles.composerFooter}><Text style={styles.counter}>{planeMessage.length}/160</Text><Text style={styles.skyText}>Sent to one open desk</Text></View>
-                <TouchableOpacity style={styles.primaryButton} onPress={handleSendPaperPlane} disabled={loading}>
-                  <Text style={styles.primaryButtonText}>{loading ? "Sending…" : "Send paper plane"}</Text><Text style={styles.arrow}>↗</Text>
+                <TextInput value={planeMessage} onChangeText={setPlaneMessage} maxLength={160} multiline placeholder="Example: Coffee break? Tell me one good thing from your day." placeholderTextColor={colors.muted} style={[styles.planeInput, { borderColor: colors.border, backgroundColor: colors.surfaceSoft, color: colors.text }]} />
+                <View style={styles.composerFooter}><Text style={[styles.counter, { color: colors.muted }]}>{planeMessage.length}/160</Text><Text style={[styles.skyText, { color: colors.teal }]}>Sent to one open desk</Text></View>
+                <TouchableOpacity style={[styles.primaryButton, { backgroundColor: colors.navy }]} onPress={handleSendPaperPlane} disabled={loading}>
+                  <Text style={styles.primaryButtonText}>{loading ? "Sending…" : "Send paper plane"}</Text><Text style={[styles.arrow, { color: colors.mint }]}>↗</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.quickMatchButton} onPress={handleFindSomeone} disabled={loading}>
-                  <Text style={styles.quickMatchText}>Or match me now</Text>
+                  <Text style={[styles.quickMatchText, { color: colors.teal }]}>Or match me now</Text>
                 </TouchableOpacity>
               </>
             )}
           </View>
-          <View style={styles.noteRow}><View style={styles.noteDot} /><Text style={styles.noteText}>Anonymous conversations. No profile sharing.</Text></View>
+          <View style={styles.noteRow}><View style={[styles.noteDot, { backgroundColor: colors.green }]} /><Text style={[styles.noteText, { color: colors.muted }]}>Anonymous conversations. No profile sharing.</Text></View>
         </View>
       </View>
     </SafeAreaView>
