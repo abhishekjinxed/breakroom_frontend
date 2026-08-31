@@ -8,6 +8,8 @@ export type PublicProfile = {
   socialLink: string | null;
   createdAt: string;
   age: number | null;
+  limitedProfile?: boolean;
+  deskNotes: Array<{ id: string; text: string; createdAt: string; _count: { applauds: number; comments: number } }>;
 };
 
 export async function getPublicProfile(token: string, userId: string) {

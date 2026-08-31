@@ -25,6 +25,7 @@ WebBrowser.maybeCompleteAuthSession();
 import { Brand } from "../constants/brand";
 import { useTheme } from "../context/ThemeContext";
 import { DeskPlanes } from "../components/PaperPlaneInbox";
+import { DeskNotesTicker } from "../components/DeskNotesTicker";
 
 export default function HomeScreen() {
   const { user, loading, loginWithGoogle, logout } = useAuth();
@@ -134,7 +135,7 @@ function FocusedHome({ username, colors, onLogout }: { username: string; colors:
   return <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.canvas }]}><ScrollView contentContainerStyle={styles.focusedContent}>
     <View style={styles.focusedHeader}><View><Text style={[styles.brand, { color: colors.teal }]}>BREAKROOM</Text><Text style={[styles.focusedTitle, { color: colors.navy }]}>Your desk, {username}</Text><Text style={[styles.focusedSub, { color: colors.muted }]}>Paper Planes land here when someone wants to connect.</Text></View><TouchableOpacity onPress={onLogout}><Text style={[styles.logoutText, { color: colors.muted }]}>Sign out</Text></TouchableOpacity></View>
     <View style={[styles.deskScene, { backgroundColor: colors.hero }]}><Text style={styles.window}>☕     ▣</Text><View style={styles.laptop}><Text style={styles.laptopScreen}>BREAKROOM</Text></View><Text style={styles.pen}>╱</Text><View style={styles.notepad}><Text style={styles.notepadLine}>TODAY'S NOTES</Text></View><View style={styles.photoFrame}><Text style={styles.photo}>☕</Text></View><View style={[styles.deskTop, { backgroundColor: colors.mint }]} /><DeskPlanes /><Text style={styles.deskCaption}>Tap a landed Paper Plane to read it.</Text><TouchableOpacity onPress={() => router.push("/bored" as any)} style={[styles.sendPlaneButton, { backgroundColor: colors.mint }]}><Text style={[styles.sendPlaneText, { color: colors.onAccent }]}>Send a Paper Plane</Text></TouchableOpacity></View>
-    <TouchableOpacity onPress={() => router.push("/inbox" as any)} style={[styles.focusedTile, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 14 }]}><Text style={[styles.tileIcon, { color: colors.teal }]}>✉</Text><Text style={[styles.tileTitle, { color: colors.text }]}>Inbox</Text><Text style={[styles.tileText, { color: colors.muted }]}>Chats with accepted Paper Planes.</Text></TouchableOpacity>
+    <DeskNotesTicker />
     <TouchableOpacity onPress={() => router.push("/account")} style={styles.accountLink}><Text style={[styles.accountLinkText, { color: colors.muted }]}>Account & privacy →</Text></TouchableOpacity>
   </ScrollView></SafeAreaView>;
 }
