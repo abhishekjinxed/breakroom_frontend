@@ -23,6 +23,7 @@ import { deleteDirectConversation, getDirectConversation, updateChatPhotoSharing
 import { Brand } from "../../constants/brand";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import { reportContent } from "../../api/safety";
 
 interface Message {
   id: string;
@@ -295,6 +296,11 @@ export default function ChatScreen() {
     } finally { setProfileBusy(false); }
   }
 
+  function reportMessage(message: Message) {
+    if (!token || message.senderId === user?.id) return;
+    Alert.alert("Report message?", "The message and sender will be sent to the moderation team for review.", [{ text: "Cancel", style: "cancel" }, { text: "Report", style: "destructive", onPress: async () => { try { await reportContent(token, "MESSAGE", message.id, "Inappropriate chat message"); Alert.alert("Report received", "Thank you. A moderator will review it."); } catch (error: any) { Alert.alert("Couldn’t report message", error?.response?.data?.message ?? "Please try again."); } } }]);
+  }
+
   function renderMessage({ item }: { item: Message }) {
     const isOwnMessage = item.senderId === user?.id;
 
@@ -305,7 +311,10 @@ export default function ChatScreen() {
           isOwnMessage ? styles.ownMessageRow : styles.otherMessageRow,
         ]}
       >
-        <View
+        <TouchableOpacity
+          activeOpacity={isOwnMessage ? 1 : 0.78}
+          onLongPress={() => reportMessage(item)}
+          delayLongPress={450}
           style={[
             styles.messageBubble,
             isOwnMessage ? styles.ownMessageBubble : styles.otherMessageBubble,
@@ -319,7 +328,7 @@ export default function ChatScreen() {
           >
             {item.text}
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
     );
   }
