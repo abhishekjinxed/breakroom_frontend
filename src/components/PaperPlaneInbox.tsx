@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import { getPendingPaperPlanes, PaperPlaneInvite, respondToPaperPlane } from "../api/bored";
 import { Brand } from "../constants/brand";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 import { getSocket } from "../services/socket";
 
 const positions = [
@@ -16,6 +17,7 @@ const positions = [
 /** An embedded desk tray: arrivals stay visible until the recipient picks one. */
 export function DeskPlanes() {
   const { token } = useAuth();
+  const { t } = useLanguage();
   const [invites, setInvites] = useState<PaperPlaneInvite[]>([]);
   const [selected, setSelected] = useState<PaperPlaneInvite | null>(null);
   const [responding, setResponding] = useState(false);
@@ -38,7 +40,7 @@ export function DeskPlanes() {
     try {
       setResponding(true); setResponseError(null);
       const result = await respondToPaperPlane(token, invite.id, accept);
-      if (accept && (!result.accepted || !result.chatId)) throw new Error("The Paper Plane was accepted, but its Inbox conversation was not created. Please try again.");
+      if (accept && (!result.accepted || !result.chatId)) throw new Error(`${t("paperPlane")} ${t("tryAgain")}`);
       setInvites((current) => current.filter((item) => item.id !== invite.id));
       setSelected(null);
       // An accepted plane creates a persistent private conversation. Take the
@@ -49,7 +51,7 @@ export function DeskPlanes() {
       // Keep the plane on the desk when Accept fails. Previously it was
       // removed and a browser-only alert was easy to miss, making a failed
       // request look like a successful acceptance.
-      const message = error?.response?.data?.message || error?.message || "We could not accept this Paper Plane. Please try again.";
+      const message = error?.response?.data?.message || error?.message || `${t("paperPlane")} ${t("tryAgain")}`;
       const code = error?.response?.data?.errorCode;
       setResponseError(code ? `${message} (${code})` : message);
     } finally { setResponding(false); }
@@ -66,16 +68,16 @@ export function DeskPlanes() {
     </View>
     <Modal transparent visible={!!selected} animationType="fade" onRequestClose={() => setSelected(null)}>
       <View style={styles.backdrop}><View style={styles.letter}>
-        <Text style={styles.letterPlane}>✈</Text><Text style={styles.eyebrow}>PAPER PLANE</Text>
-        <Text style={styles.sender}>From {selected?.sender.anonymousUsername}</Text>
+        <Text style={styles.letterPlane}>✈</Text><Text style={styles.eyebrow}>{t("paperPlane")}</Text>
+        <Text style={styles.sender}>{t("from")} {selected?.sender.anonymousUsername}</Text>
         <Text style={styles.note}>“{snippet}”</Text>
-        <Text style={styles.hint}>Accept to open a private conversation in your Inbox.</Text>
+        <Text style={styles.hint}>{t("planeHint")}</Text>
         {responseError && <Text style={styles.error}>{responseError}</Text>}
         {responding ? <ActivityIndicator color={Brand.colors.teal} style={styles.loader} /> : <View style={styles.actions}>
-          <TouchableOpacity style={styles.decline} onPress={() => respond(false)}><Text style={styles.declineText}>Let it pass</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.accept} onPress={() => respond(true)}><Text style={styles.acceptText}>Accept plane</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.decline} onPress={() => respond(false)}><Text style={styles.declineText}>{t("letItPass")}</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.accept} onPress={() => respond(true)}><Text style={styles.acceptText}>{t("acceptPlane")}</Text></TouchableOpacity>
         </View>}
-        {!responding && <TouchableOpacity onPress={() => { setResponseError(null); setSelected(null); }} style={styles.close}><Text style={styles.closeText}>Back to desk</Text></TouchableOpacity>}
+        {!responding && <TouchableOpacity onPress={() => { setResponseError(null); setSelected(null); }} style={styles.close}><Text style={styles.closeText}>{t("backToDesk")}</Text></TouchableOpacity>}
       </View></View>
     </Modal>
   </>;

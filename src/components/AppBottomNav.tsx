@@ -10,8 +10,8 @@ import { getSocket } from "../services/socket";
 
 const items = [
   { label: "home", icon: "⌂", route: "/" },
-  { label: "Inbox", icon: "✉", route: "/inbox" },
-  { label: "Alerts", icon: "!", route: "/notifications" },
+  { label: "inbox", icon: "✉", route: "/inbox" },
+  { label: "alerts", icon: "!", route: "/notifications" },
 ] as const;
 
 export function AppBottomNav() {
@@ -70,7 +70,7 @@ export function AppBottomNav() {
   return <View style={[styles.shell, { backgroundColor: colors.surface, borderColor: colors.border }]}>
     {items.map((item) => {
       const active = item.route === "/" ? pathname === "/" : pathname.startsWith(item.route);
-      const label = item.route === "/inbox" ? item.label : t(item.label as any);
+      const label = t(item.label as any);
       const badgeCount = item.route === "/inbox" ? inboxUnreadCount : item.route === "/notifications" ? unreadCount : 0;
       const badgeLabel = badgeCount > 9 ? "9+" : String(badgeCount);
       return <TouchableOpacity key={item.route} accessibilityRole="button" accessibilityLabel={badgeCount ? `${label}, ${badgeCount} unread` : label} style={styles.item} onPress={() => {
