@@ -39,7 +39,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const nextSocket = getSocket();
       if (!nextSocket || attached) return;
       socket = nextSocket; attached = true;
-      socket.on("paper_plane:received", () => add("Paper Plane landed", "A new note has arrived on your desk."));
+      socket.on("paper_plane:received", (plane: { isCharter?: boolean }) => add(plane.isCharter ? "Charter Plane landed" : "Paper Plane landed", plane.isCharter ? "A red plane was sent directly to your desk." : "A new note has arrived on your desk."));
       socket.on("inbox:updated", () => add("New Inbox conversation", "A Paper Plane was accepted and is ready to chat."));
       socket.on("chat:partner-left", () => add("Conversation removed", "The other person ended this private conversation."));
       socket.on("notification:created", (item: { id: string; title: string; detail: string; link: string | null; createdAt: string }) => addNotification({ ...item, createdAt: new Date(item.createdAt), read: false }));

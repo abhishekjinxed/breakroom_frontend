@@ -17,6 +17,7 @@ export interface JoinBoredResult {
 export interface PaperPlaneInvite {
   id: string;
   message: string;
+  isCharter: boolean;
   expiresAt: string;
   sender: { id: string; anonymousUsername: string };
 }
@@ -67,6 +68,10 @@ const auth = (token: string) => ({ headers: { Authorization: `Bearer ${token}` }
 
 export async function sendPaperPlane(token: string, message: string) {
   return (await api.post("/api/bored/paper-plane", { message }, auth(token))).data as { success: true; invite: Pick<PaperPlaneInvite, "id" | "message" | "expiresAt">; wallet: { balance: number; currency: "Paisa"; paperPlaneCost: number } };
+}
+
+export async function sendCharterPaperPlane(token: string, recipientId: string) {
+  return (await api.post(`/api/bored/paper-plane/charter/${recipientId}`, {}, auth(token))).data as { success: true; invite: Pick<PaperPlaneInvite, "id" | "message" | "isCharter" | "expiresAt">; wallet: { balance: number; currency: "Paisa"; paperPlaneCost: number } };
 }
 
 export async function getPendingPaperPlanes(token: string) {
