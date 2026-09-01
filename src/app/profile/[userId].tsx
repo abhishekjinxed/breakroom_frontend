@@ -9,7 +9,7 @@ import { useTheme } from "../../context/ThemeContext";
 
 export default function PublicProfileScreen() {
   const { userId, fromChat } = useLocalSearchParams<{ userId: string; fromChat?: string }>();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { colors } = useTheme();
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,7 +60,7 @@ export default function PublicProfileScreen() {
       </View>
       <View style={[styles.detailsPanel, { borderColor: colors.border, backgroundColor: colors.surfaceSoft }]}><Text style={[styles.sectionLabel, { color: colors.teal }]}>PROFILE DETAILS</Text>{!!profile.bio && <Text style={[styles.bio, { color: colors.text }]}>{profile.bio}</Text>}{(!!profile.gender || profile.age !== null) && <View style={styles.tags}>{profile.age !== null && <View style={[styles.tag, { backgroundColor: colors.violetSoft }]}><Text style={[styles.tagText, { color: colors.violet }]}>Age {profile.age}</Text></View>}{!!profile.gender && <View style={[styles.tag, { backgroundColor: colors.tealSoft }]}><Text style={[styles.tagText, { color: colors.teal }]}>{profile.gender}</Text></View>}</View>}{!profile.bio && !profile.gender && profile.age === null && <Text style={[styles.emptyDetails, { color: colors.muted }]}>This member has not shared additional profile details.</Text>}</View>
       {!!profile.socialLink && <TouchableOpacity onPress={() => Linking.openURL(profile.socialLink!)} style={[styles.linkButton, { borderColor: colors.border }]}><Text style={[styles.linkText, { color: colors.violet }]}>Open social profile ↗</Text></TouchableOpacity>}
-      {fromChat !== "1" && <TouchableOpacity disabled={sending} onPress={sendCharter} style={[styles.connectButton, styles.charterButton, sending && styles.disabled]}><Text style={styles.connectText}>{sending ? "Sending…" : "Send Charter Plane · 100 Paisa"}</Text><Text style={styles.charterHelp}>Direct delivery · 10× standard cost · 24 hours</Text></TouchableOpacity>}
+      {fromChat !== "1" && user?.id !== profile.id && <TouchableOpacity disabled={sending} onPress={sendCharter} style={[styles.connectButton, styles.charterButton, sending && styles.disabled]}><Text style={styles.connectText}>{sending ? "Sending…" : "Send Charter Plane · 100 Paisa"}</Text><Text style={styles.charterHelp}>Direct delivery · 10× standard cost · 24 hours</Text></TouchableOpacity>}
       <TouchableOpacity onPress={reportMember} style={styles.reportMember}><Text style={[styles.reportMemberText, { color: colors.danger }]}>Report member</Text></TouchableOpacity>
       {!!profile.deskNotes?.length && <View style={[styles.notesSection, { borderColor: colors.border }]}><Text style={[styles.notesTitle, { color: colors.text }]}>Public Desk Notes</Text>{profile.deskNotes.map((note) => <View key={note.id} style={[styles.publicNote, { backgroundColor: colors.amberSoft }]}><Text style={[styles.publicNoteText, { color: colors.text }]}>{note.text}</Text><Text style={[styles.publicNoteMeta, { color: colors.violet }]}>{note._count.applauds} applause · {note._count.comments} comments</Text></View>)}</View>}
     </View>
