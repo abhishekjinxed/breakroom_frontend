@@ -8,7 +8,15 @@ export async function pickAndUploadMedia(maxVideoDuration = 60, videoOnly = fals
   const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: videoOnly ? ["videos"] : imageOnly ? ["images"] : ["images", "videos"], quality: 0.8, videoMaxDuration: maxVideoDuration });
   if (result.canceled) return null;
   const asset = result.assets[0];
-  const file = await fetch(asset.uri).then((response) => response.blob());
+  let file: Blob;
+  try {
+    const response = await fetch(asset.uri);
+    if (!response.ok) throw new Error(`Selected file could not be read (${response.status}).`);
+    file = await response.blob();
+    if (!file.size) throw new Error("The selected file is empty.");
+  } catch (error: any) {
+    throw new Error(error?.message || "Couldn't read that file. Please choose a different photo.");
+  }
   const body = new FormData();
   body.append("file", file, asset.fileName ?? `work-pulse.${asset.type === "video" ? "mp4" : "jpg"}`);
   body.append("upload_preset", uploadPreset);
@@ -16,9 +24,16 @@ export async function pickAndUploadMedia(maxVideoDuration = 60, videoOnly = fals
   const data = await new Promise<any>((resolve, reject) => {
     const request = new XMLHttpRequest();
     request.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`);
+    request.timeout = 120000;
     request.upload.onprogress = (event) => { if (event.lengthComputable) onProgress?.(event.loaded / event.total); };
-    request.onload = () => request.status >= 200 && request.status < 300 ? resolve(JSON.parse(request.responseText)) : reject(new Error("Media upload failed."));
-    request.onerror = () => reject(new Error("Media upload failed."));
+    request.onload = () => {
+      let response: any = null;
+      try { response = request.responseText ? JSON.parse(request.responseText) : null; } catch { /* Preserve a useful fallback error below. */ }
+      if (request.status >= 200 && request.status < 300 && response?.secure_url) return resolve(response);
+      reject(new Error(response?.error?.message || `Cloudinary upload failed (${request.status || "network error"}).`));
+    };
+    request.onerror = () => reject(new Error("Cloudinary upload could not reach the server. Check your connection and try again."));
+    request.ontimeout = () => reject(new Error("Cloudinary upload timed out. Please try a smaller photo."));
     request.send(body);
   });
   const originalUrl = data.secure_url as string;
