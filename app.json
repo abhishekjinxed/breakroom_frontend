@@ -15,6 +15,7 @@
     "android": {
       "package": "com.boredapp.breakroom",
       "googleServicesFile": "./google-services.json",
+      "softwareKeyboardLayoutMode": "resize",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#172B4D",
