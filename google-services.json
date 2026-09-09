@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1082736452420",
+    "project_id": "short-video-39618",
+    "storage_bucket": "short-video-39618.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1082736452420:android:674e579c5d4c19235d6d11",
+        "android_client_info": {
+          "package_name": "com.boredapp.breakroom"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxlOiGV-_2yEnUr94eT_avUTTj4t57MGc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
