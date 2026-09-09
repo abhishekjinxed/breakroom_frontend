@@ -1,4 +1,5 @@
 import * as ImagePicker from "expo-image-picker";
+import { Platform } from "react-native";
 
 const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const uploadPreset = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -8,17 +9,25 @@ export async function pickAndUploadMedia(maxVideoDuration = 60, videoOnly = fals
   const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: videoOnly ? ["videos"] : imageOnly ? ["images"] : ["images", "videos"], quality: 0.8, videoMaxDuration: maxVideoDuration });
   if (result.canceled) return null;
   const asset = result.assets[0];
-  let file: Blob;
-  try {
-    const response = await fetch(asset.uri);
-    if (!response.ok) throw new Error(`Selected file could not be read (${response.status}).`);
-    file = await response.blob();
-    if (!file.size) throw new Error("The selected file is empty.");
-  } catch (error: any) {
-    throw new Error(error?.message || "Couldn't read that file. Please choose a different photo.");
-  }
   const body = new FormData();
-  body.append("file", file, asset.fileName ?? `work-pulse.${asset.type === "video" ? "mp4" : "jpg"}`);
+  const fileName = asset.fileName ?? `work-pulse.${asset.type === "video" ? "mp4" : "jpg"}`;
+  const mimeType = asset.mimeType ?? (asset.type === "video" ? "video/mp4" : "image/jpeg");
+
+  if (Platform.OS === "web") {
+    let file: Blob;
+    try {
+      const response = await fetch(asset.uri);
+      if (!response.ok) throw new Error(`Selected file could not be read (${response.status}).`);
+      file = await response.blob();
+      if (!file.size) throw new Error("The selected file is empty.");
+    } catch (error: any) {
+      throw new Error(error?.message || "Couldn't read that file. Please choose a different photo.");
+    }
+    body.append("file", file, fileName);
+  } else {
+    // Native FormData streams the selected content URI directly to Cloudinary.
+    body.append("file", { uri: asset.uri, name: fileName, type: mimeType } as unknown as Blob);
+  }
   body.append("upload_preset", uploadPreset);
   const resourceType = asset.type === "video" ? "video" : "image";
   const data = await new Promise<any>((resolve, reject) => {
