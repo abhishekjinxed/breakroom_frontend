@@ -2,6 +2,8 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useState 
 import { getNotifications, markNotificationsRead as markNotificationsReadRequest, StoredNotification } from "../api/notifications";
 import { useAuth } from "./AuthContext";
 import { getSocket } from "../services/socket";
+import { registerPushDevice, unregisterPushDevice } from "../api/push";
+import { registerForAndroidPushNotifications } from "../services/push-notifications";
 
 export type BreakroomNotification = { id: string; title: string; detail: string; link?: string | null; createdAt: Date; read: boolean };
 type NotificationContextValue = { notifications: BreakroomNotification[]; unreadCount: number; markAllRead: () => Promise<void> };
@@ -29,6 +31,23 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       .then((items) => { if (active) setNotifications(items.map(toNotification)); })
       .catch(() => undefined);
     return () => { active = false; };
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    let mounted = true;
+    let deviceToken: string | null = null;
+    registerForAndroidPushNotifications()
+      .then(async (nextToken) => {
+        if (!mounted || !nextToken) return;
+        deviceToken = nextToken;
+        await registerPushDevice(token, nextToken);
+      })
+      .catch((error) => console.warn("PUSH REGISTRATION ERROR:", error));
+    return () => {
+      mounted = false;
+      if (deviceToken) void unregisterPushDevice(token, deviceToken).catch(() => undefined);
+    };
   }, [token]);
 
   useEffect(() => {

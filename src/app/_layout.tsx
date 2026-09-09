@@ -1,7 +1,8 @@
-import { Stack, usePathname } from "expo-router";
+import { Stack, router, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { View } from "react-native";
+import * as Notifications from "expo-notifications";
 
 import { connectSocket, disconnectSocket } from "../services/socket";
 
@@ -11,6 +12,7 @@ import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import { AppBottomNav } from "../components/AppBottomNav";
 import { TermsGate } from "../components/TermsGate";
 import { NotificationProvider } from "../context/NotificationContext";
+import { notificationRoute } from "../services/push-notifications";
 
 export default function RootLayout() {
   return (
@@ -39,6 +41,13 @@ function RootNavigator() {
       // navigation.
     };
   }, [token]);
+
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      router.push(notificationRoute(response.notification) as never);
+    });
+    return () => subscription.remove();
+  }, []);
 
   const hideNavigation = pathname.startsWith("/chat/") || pathname.startsWith("/auth/");
 

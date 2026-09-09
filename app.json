@@ -52,6 +52,13 @@
             "ios": ["en", "hi", "es", "fr", "de", "pt", "ar", "ja", "ta", "id"]
           }
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#A76134",
+          "defaultChannel": "breakroom"
+        }
       ]
     ],
     "experiments": {
