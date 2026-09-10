@@ -3,6 +3,9 @@ import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
+export const ANDROID_PUSH_CHANNEL = "breakroom-alerts-v2";
+const PUSH_SOUND = "paper-plane-landing.wav";
+
 if (Platform.OS !== "web") {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -19,12 +22,12 @@ export async function registerForAndroidPushNotifications() {
 
   // Android 13 only presents the notification permission prompt after a
   // channel exists, so create the channel before requesting the Expo token.
-  await Notifications.setNotificationChannelAsync("breakroom", {
-    name: "Breakroom updates",
+  await Notifications.setNotificationChannelAsync(ANDROID_PUSH_CHANNEL, {
+    name: "Breakroom alerts",
     importance: Notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 200, 120, 200],
     lightColor: "#A76134",
-    sound: "default",
+    sound: PUSH_SOUND,
   });
 
   let status = (await Notifications.getPermissionsAsync()).status;
