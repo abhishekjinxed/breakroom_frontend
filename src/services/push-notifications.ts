@@ -4,7 +4,7 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
 export const ANDROID_PUSH_CHANNEL = "breakroom-alerts-v2";
-const PUSH_SOUND = "paper-plane-landing.wav";
+const PUSH_SOUND = "paper_plane_landing.wav";
 
 if (Platform.OS !== "web") {
   Notifications.setNotificationHandler({

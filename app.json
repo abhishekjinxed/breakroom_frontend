@@ -61,7 +61,7 @@
           "color": "#A76134",
           "defaultChannel": "breakroom-alerts-v2",
           "sounds": [
-            "./assets/sounds/paper-plane-landing.wav"
+            "./assets/sounds/paper_plane_landing.wav"
           ]
         }
       ]
