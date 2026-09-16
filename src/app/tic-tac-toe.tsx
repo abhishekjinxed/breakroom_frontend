@@ -62,16 +62,16 @@ export default function TicTacToeScreen() {
     } finally { setBusy(false); }
   };
 
-  const leave = () => {
+  const leave = async () => {
     if (!token || !game || busy) return;
-    Alert.alert("Leave match?", game.status === "WAITING" ? "Your open match will be cancelled." : "This match will end for both players.", [
-      { text: "Stay", style: "cancel" },
-      { text: "Leave", style: "destructive", onPress: async () => {
-        try { setBusy(true); await leaveTicTacToe(token, game.id); setGame(null); setError(null); }
-        catch (requestError: any) { setError(requestError?.response?.data?.message ?? "Unable to leave this match."); }
-        finally { setBusy(false); }
-      } },
-    ]);
+    try {
+      setBusy(true);
+      await leaveTicTacToe(token, game.id);
+      setGame(null);
+      setError(null);
+    } catch (requestError: any) {
+      setError(requestError?.response?.data?.message ?? "Unable to leave this match.");
+    } finally { setBusy(false); }
   };
 
   const addToWorkCircle = async () => {
