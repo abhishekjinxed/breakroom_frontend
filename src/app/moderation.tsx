@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 import { disableReportedContent, getModerationReports, getModeratorStatus, ModerationReport, resolveModerationReport } from "../api/safety";
 import { useAuth } from "../context/AuthContext";
@@ -12,6 +12,8 @@ export default function ModerationScreen() {
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [workingId, setWorkingId] = useState<string | null>(null);
+  const [reportToDisable, setReportToDisable] = useState<ModerationReport | null>(null);
+  const [disableError, setDisableError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -42,7 +44,20 @@ export default function ModerationScreen() {
   }
   function disable(report: ModerationReport) {
     if (!token || workingId) return;
-    Alert.alert("Disable reported content?", `This makes the ${report.target.label.toLowerCase()} unavailable and notifies its author that it was disabled for violating Breakroom’s Terms.`, [{ text: "Cancel", style: "cancel" }, { text: "Disable & notify", style: "destructive", onPress: async () => { try { setWorkingId(report.id); await disableReportedContent(token, report.id); setReports((current) => current.map((item) => item.id === report.id ? { ...item, status: "ACTIONED", reviewedAt: new Date().toISOString() } : item)); } catch (error: any) { Alert.alert("Couldn’t disable content", error?.response?.data?.message ?? "Please try again."); } finally { setWorkingId(null); } } }]);
+    setDisableError(null);
+    setReportToDisable(report);
+  }
+  async function confirmDisable() {
+    if (!token || !reportToDisable || workingId) return;
+    try {
+      setWorkingId(reportToDisable.id);
+      setDisableError(null);
+      await disableReportedContent(token, reportToDisable.id);
+      setReports((current) => current.map((item) => item.id === reportToDisable.id ? { ...item, status: "ACTIONED", reviewedAt: new Date().toISOString() } : item));
+      setReportToDisable(null);
+    } catch (error: any) {
+      setDisableError(error?.response?.data?.message ?? "Please try again.");
+    } finally { setWorkingId(null); }
   }
 
   if (loading) return <SafeAreaView style={[styles.safe, { backgroundColor: colors.canvas }]}><ActivityIndicator color={colors.teal} style={styles.loader} /></SafeAreaView>;
@@ -56,7 +71,7 @@ export default function ModerationScreen() {
     <Text style={[styles.section, { color: colors.text }]}>Open reports · {openReports.length}</Text>
     {openReports.length ? openReports.map((report) => <ReportCard key={report.id} report={report} working={workingId === report.id} colors={colors} onResolve={resolve} onDisable={disable} />) : <Text style={[styles.empty, { color: colors.muted }]}>Nothing needs review right now.</Text>}
     {!!completedReports.length && <><Text style={[styles.section, { color: colors.text }]}>Completed</Text>{completedReports.map((report) => <ReportCard key={report.id} report={report} working={false} colors={colors} onResolve={resolve} onDisable={disable} />)}</>}
-  </ScrollView></SafeAreaView>;
+  </ScrollView><Modal transparent visible={!!reportToDisable} animationType="fade" onRequestClose={() => !workingId && setReportToDisable(null)}><View style={styles.backdrop}><View style={[styles.confirmCard, { backgroundColor: colors.surface }]}><Text style={styles.confirmEyebrow}>MODERATION ACTION</Text><Text style={[styles.confirmTitle, { color: colors.navy }]}>Disable this content?</Text><Text style={[styles.confirmCopy, { color: colors.muted }]}>This will hide the {reportToDisable?.target.label.toLowerCase()} across Breakroom and notify its author that it was disabled for not following the Terms of Use.</Text>{disableError && <Text style={styles.confirmError}>{disableError}</Text>}<View style={styles.confirmActions}><TouchableOpacity disabled={!!workingId} onPress={() => setReportToDisable(null)} style={[styles.cancelButton, { borderColor: colors.border }]}><Text style={[styles.cancelButtonText, { color: colors.muted }]}>Keep available</Text></TouchableOpacity><TouchableOpacity disabled={!!workingId} onPress={confirmDisable} style={[styles.confirmDisableButton, !!workingId && styles.disabled]}><Text style={styles.confirmDisableText}>{workingId ? "Disabling…" : "Disable & notify"}</Text></TouchableOpacity></View></View></View></Modal></SafeAreaView>;
 }
 
 function ReportCard({ report, working, colors, onResolve, onDisable }: { report: ModerationReport; working: boolean; colors: any; onResolve: (report: ModerationReport, status: "REVIEWED" | "DISMISSED") => void; onDisable: (report: ModerationReport) => void }) {
@@ -67,10 +82,10 @@ function ReportCard({ report, working, colors, onResolve, onDisable }: { report:
     <Text style={[styles.targetText, { color: colors.text }]}>{report.target.text}</Text>
     <View style={[styles.reason, { backgroundColor: colors.surfaceSoft }]}><Text style={[styles.reasonLabel, { color: colors.muted }]}>REPORTED REASON</Text><Text style={[styles.reasonText, { color: colors.text }]}>{report.reason}</Text>{!!report.details && <Text style={[styles.details, { color: colors.muted }]}>{report.details}</Text>}</View>
     <Text style={[styles.meta, { color: colors.muted }]}>Reported by {report.reporter.anonymousUsername} · {new Date(report.createdAt).toLocaleString()}</Text>
-    {open && <View style={styles.actions}><TouchableOpacity disabled={working} onPress={() => onResolve(report, "DISMISSED")} style={[styles.dismiss, { borderColor: colors.border }]}><Text style={[styles.dismissText, { color: colors.muted }]}>Dismiss</Text></TouchableOpacity><TouchableOpacity disabled={working} onPress={() => onDisable(report)} style={styles.disable}><Text style={styles.disableText}>{working ? "Saving…" : "Disable"}</Text></TouchableOpacity><TouchableOpacity disabled={working} onPress={() => onResolve(report, "REVIEWED")} style={[styles.review, { backgroundColor: colors.navy }]}><Text style={styles.reviewText}>Review</Text></TouchableOpacity></View>}
+    {open && <View style={styles.actions}><TouchableOpacity disabled={working} onPress={() => onDisable(report)} style={[styles.disable, working && styles.disabled]}><Text style={styles.disableText}>{working ? "Saving…" : "Disable content & notify author"}</Text></TouchableOpacity><View style={styles.secondaryActions}><TouchableOpacity disabled={working} onPress={() => onResolve(report, "DISMISSED")} style={[styles.dismiss, { borderColor: colors.border }]}><Text style={[styles.dismissText, { color: colors.muted }]}>Dismiss report</Text></TouchableOpacity><TouchableOpacity disabled={working} onPress={() => onResolve(report, "REVIEWED")} style={[styles.review, { backgroundColor: colors.navy }]}><Text style={styles.reviewText}>Mark reviewed</Text></TouchableOpacity></View></View>}
   </View>;
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 }, loader: { marginTop: 100 }, content: { padding: 22, paddingBottom: 44 }, restricted: { padding: 24, marginTop: 70 }, back: { fontWeight: "800" }, eyebrow: { fontSize: 11, fontWeight: "900", letterSpacing: 1.3, marginTop: 24 }, title: { fontSize: 29, fontWeight: "900", marginTop: 7 }, copy: { fontSize: 14, lineHeight: 21, marginTop: 7 }, section: { fontSize: 16, fontWeight: "900", marginTop: 30, marginBottom: 10 }, empty: { fontSize: 14, lineHeight: 20 }, card: { borderWidth: 1, borderRadius: 18, padding: 16, marginBottom: 11 }, cardTop: { flexDirection: "row", justifyContent: "space-between", gap: 10 }, type: { fontSize: 10, fontWeight: "900", letterSpacing: 1 }, status: { fontSize: 10, fontWeight: "900", letterSpacing: .6 }, author: { fontWeight: "900", fontSize: 15, marginTop: 11 }, targetText: { fontSize: 14, lineHeight: 20, marginTop: 5 }, reason: { borderRadius: 11, padding: 11, marginTop: 14 }, reasonLabel: { fontSize: 9, fontWeight: "900", letterSpacing: .8 }, reasonText: { fontSize: 13, fontWeight: "800", marginTop: 4 }, details: { fontSize: 12, lineHeight: 18, marginTop: 5 }, meta: { fontSize: 10, lineHeight: 15, marginTop: 12 }, actions: { flexDirection: "row", gap: 7, marginTop: 15 }, dismiss: { flex: 1, minHeight: 42, borderWidth: 1, borderRadius: 10, alignItems: "center", justifyContent: "center" }, dismissText: { fontWeight: "800", fontSize: 11 }, disable: { flex: 1, minHeight: 42, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#B8443F" }, disableText: { color: "#FFF", fontWeight: "900", fontSize: 11 }, review: { flex: 1, minHeight: 42, borderRadius: 10, alignItems: "center", justifyContent: "center" }, reviewText: { color: "#FFF", fontWeight: "900", fontSize: 11 },
+  safe: { flex: 1 }, loader: { marginTop: 100 }, content: { padding: 22, paddingBottom: 44 }, restricted: { padding: 24, marginTop: 70 }, back: { fontWeight: "800" }, eyebrow: { fontSize: 11, fontWeight: "900", letterSpacing: 1.3, marginTop: 24 }, title: { fontSize: 29, fontWeight: "900", marginTop: 7 }, copy: { fontSize: 14, lineHeight: 21, marginTop: 7 }, section: { fontSize: 16, fontWeight: "900", marginTop: 30, marginBottom: 10 }, empty: { fontSize: 14, lineHeight: 20 }, card: { borderWidth: 1, borderRadius: 18, padding: 16, marginBottom: 11 }, cardTop: { flexDirection: "row", justifyContent: "space-between", gap: 10 }, type: { fontSize: 10, fontWeight: "900", letterSpacing: 1 }, status: { fontSize: 10, fontWeight: "900", letterSpacing: .6 }, author: { fontWeight: "900", fontSize: 15, marginTop: 11 }, targetText: { fontSize: 14, lineHeight: 20, marginTop: 5 }, reason: { borderRadius: 11, padding: 11, marginTop: 14 }, reasonLabel: { fontSize: 9, fontWeight: "900", letterSpacing: .8 }, reasonText: { fontSize: 13, fontWeight: "800", marginTop: 4 }, details: { fontSize: 12, lineHeight: 18, marginTop: 5 }, meta: { fontSize: 10, lineHeight: 15, marginTop: 12 }, actions: { marginTop: 15, gap: 8 }, secondaryActions: { flexDirection: "row", gap: 8 }, dismiss: { flex: 1, minHeight: 46, borderWidth: 1, borderRadius: 11, alignItems: "center", justifyContent: "center" }, dismissText: { fontWeight: "800", fontSize: 12 }, disable: { minHeight: 50, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "#B8443F", paddingHorizontal: 12 }, disableText: { color: "#FFF", fontWeight: "900", fontSize: 13 }, review: { flex: 1, minHeight: 46, borderRadius: 11, alignItems: "center", justifyContent: "center" }, reviewText: { color: "#FFF", fontWeight: "900", fontSize: 12 }, backdrop: { flex: 1, justifyContent: "center", padding: 22, backgroundColor: "rgba(29, 18, 13, .65)" }, confirmCard: { borderRadius: 20, padding: 21 }, confirmEyebrow: { color: "#B8443F", fontSize: 10, letterSpacing: 1.2, fontWeight: "900" }, confirmTitle: { fontSize: 22, fontWeight: "900", marginTop: 7 }, confirmCopy: { fontSize: 14, lineHeight: 21, marginTop: 9 }, confirmError: { color: "#B8443F", fontSize: 12, lineHeight: 18, marginTop: 12, fontWeight: "700" }, confirmActions: { flexDirection: "row", gap: 9, marginTop: 21 }, cancelButton: { flex: 1, minHeight: 48, borderWidth: 1, borderRadius: 12, alignItems: "center", justifyContent: "center" }, cancelButtonText: { fontSize: 12, fontWeight: "900", textAlign: "center" }, confirmDisableButton: { flex: 1, minHeight: 48, borderRadius: 12, backgroundColor: "#B8443F", alignItems: "center", justifyContent: "center", paddingHorizontal: 8 }, confirmDisableText: { color: "#FFF", fontSize: 12, fontWeight: "900", textAlign: "center" }, disabled: { opacity: 0.55 },
 });
