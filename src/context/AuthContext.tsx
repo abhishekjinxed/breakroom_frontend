@@ -13,7 +13,7 @@ interface AuthContextType {
   loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   acceptTerms: () => Promise<void>;
-  updateProfile: (profile: Pick<User, "bio" | "dateOfBirth" | "gender" | "socialLink">) => Promise<void>;
+  updateProfile: (profile: Pick<User, "publicAvatarUrl" | "publicFlair" | "bio" | "dateOfBirth" | "gender" | "socialLink">) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(updatedUser);
   }
 
-  async function updateProfile(profile: Pick<User, "bio" | "dateOfBirth" | "gender" | "socialLink">) {
+  async function updateProfile(profile: Pick<User, "publicAvatarUrl" | "publicFlair" | "bio" | "dateOfBirth" | "gender" | "socialLink">) {
     if (!token) return;
     const updatedUser = await updateMyProfileRequest(token, profile);
     setUser(updatedUser);

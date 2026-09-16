@@ -6,6 +6,7 @@ import { sendCharterPaperPlane } from "../../api/bored";
 import { reportContent } from "../../api/safety";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import { PublicAvatar, PublicFlair } from "../../components/PublicIdentity";
 
 export default function PublicProfileScreen() {
   const { userId, fromChat } = useLocalSearchParams<{ userId: string; fromChat?: string }>();
@@ -51,7 +52,7 @@ export default function PublicProfileScreen() {
   return <SafeAreaView style={[styles.safe, { backgroundColor: colors.canvas }]}><ScrollView contentContainerStyle={styles.content}>
     <TouchableOpacity onPress={() => router.back()}><Text style={[styles.back, { color: colors.teal }]}>← Back</Text></TouchableOpacity>
     <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <View style={styles.identity}><View style={[styles.avatar, { backgroundColor: colors.violetSoft }]}><Text style={[styles.initial, { color: colors.violet }]}>{profile.anonymousUsername.charAt(0).toUpperCase()}</Text></View><View style={styles.identityCopy}><Text style={[styles.name, { color: colors.navy }]}>{profile.anonymousUsername}</Text><Text style={[styles.memberSince, { color: colors.muted }]}>Breakroom member since {memberSince}</Text></View></View>
+      <View style={styles.identity}><PublicAvatar member={profile} size={52} backgroundColor={colors.violetSoft} color={colors.violet} /><View style={styles.identityCopy}><PublicFlair member={profile} nameColor={colors.navy} flairColor={colors.muted} /><Text style={[styles.memberSince, { color: colors.muted }]}>Breakroom member since {memberSince}</Text></View></View>
       {!!profile.limitedProfile && <View style={[styles.limited, { backgroundColor: colors.surfaceSoft }]}><Text style={[styles.limitedText, { color: colors.muted }]}>Only shared photos and public Desk Notes are visible. Other profile details are private.</Text></View>}
       <View style={styles.photoSection}>
         <Text style={[styles.sectionLabel, { color: colors.teal }]}>PROFILE PHOTOS</Text>

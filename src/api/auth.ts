@@ -7,6 +7,8 @@ export interface User {
   createdAt: string;
   lastActiveAt?: string;
   termsAcceptedAt?: string | null;
+  publicAvatarUrl?: string | null;
+  publicFlair?: string | null;
   bio?: string | null;
   dateOfBirth?: string | null;
   gender?: string | null;
@@ -34,7 +36,7 @@ export async function getMe(token: string) {
   return response.data;
 }
 
-export async function updateMyProfile(token: string, profile: Pick<User, "bio" | "dateOfBirth" | "gender" | "socialLink">) {
+export async function updateMyProfile(token: string, profile: Pick<User, "publicAvatarUrl" | "publicFlair" | "bio" | "dateOfBirth" | "gender" | "socialLink">) {
   const response = await api.put("/api/me", profile, { headers: { Authorization: `Bearer ${token}` } });
   return response.data.user as User;
 }

@@ -24,6 +24,7 @@ import { Brand } from "../../constants/brand";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { reportContent } from "../../api/safety";
+import { PublicAvatar, PublicFlair, PublicIdentity } from "../../components/PublicIdentity";
 
 interface Message {
   id: string;
@@ -58,6 +59,7 @@ export default function ChatScreen() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [profileBusy, setProfileBusy] = useState(false);
+  const [otherMember, setOtherMember] = useState<PublicIdentity | null>(null);
   const [profileSharing, setProfileSharing] = useState({ isSharingMyProfile: false, canViewMemberProfile: false, memberId: null as string | null, photos: [] as Array<{ id: string; url: string; visibility: "PRIVATE" | "PUBLIC"; createdAt: string; sharedWithMember: boolean }> });
 
   const inputRef = useRef<TextInput>(null);
@@ -79,6 +81,7 @@ export default function ChatScreen() {
           if (!cancelled) {
             setMessages(conversation.messages.map((message) => ({ ...message, chatId: message.chatId ?? chatId })));
             setProfileSharing(conversation.profileSharing);
+            setOtherMember(conversation.otherMember);
           }
         } else {
           const history = await getChatMessages(token, chatId);
@@ -350,7 +353,7 @@ export default function ChatScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity disabled={!isDirect || !profileSharing.canViewMemberProfile} onPress={openMemberProfile} style={styles.headerCenter}>
-          <Text style={[styles.username, { color: colors.navy }]}>{isDirect ? profileSharing.canViewMemberProfile ? "Work Circle ›" : "Work Circle" : "Breakroom chat"}</Text>
+          {isDirect && otherMember ? <View style={styles.chatIdentity}><PublicAvatar member={otherMember} size={26} backgroundColor={colors.violetSoft} color={colors.violet} /><PublicFlair member={otherMember} nameColor={colors.navy} flairColor={colors.muted} compact /></View> : <Text style={[styles.username, { color: colors.navy }]}>{isDirect ? "Work Circle" : "Breakroom chat"}</Text>}
 
           <Text
             style={[
@@ -481,6 +484,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
   },
+  chatIdentity: { flexDirection: "row", alignItems: "center", gap: 7, maxWidth: "100%" },
 
   headerSpacer: {
     width: 82,

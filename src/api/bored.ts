@@ -9,6 +9,8 @@ export interface JoinBoredResult {
     otherUser?: {
       id: string;
       anonymousUsername: string;
+      publicAvatarUrl?: string | null;
+      publicFlair?: string | null;
     };
   };
   message?: string;
@@ -19,7 +21,7 @@ export interface PaperPlaneInvite {
   message: string;
   isCharter: boolean;
   expiresAt: string;
-  sender: { id: string; anonymousUsername: string };
+  sender: { id: string; anonymousUsername: string; publicAvatarUrl?: string | null; publicFlair?: string | null };
 }
 
 export async function joinBored(token: string): Promise<JoinBoredResult> {

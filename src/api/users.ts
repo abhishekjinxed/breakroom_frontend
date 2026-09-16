@@ -5,6 +5,8 @@ export type ProfilePhoto = { id: string; url: string; visibility: "PRIVATE" | "P
 export type PublicProfile = {
   id: string;
   anonymousUsername: string;
+  publicAvatarUrl?: string | null;
+  publicFlair?: string | null;
   bio: string | null;
   gender: string | null;
   socialLink: string | null;

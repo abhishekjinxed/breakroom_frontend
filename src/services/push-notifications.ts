@@ -3,7 +3,10 @@ import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
-export const ANDROID_PUSH_CHANNEL = "breakroom-alerts-v2";
+// Android keeps a channel's alert behaviour after its first creation.  Use a
+// new channel for the bundled paper-plane sound so existing installs receive
+// the updated audible setting instead of their old silent channel preference.
+export const ANDROID_PUSH_CHANNEL = "breakroom-alerts-v3";
 const PUSH_SOUND = "paper_plane_landing.wav";
 
 if (Platform.OS !== "web") {

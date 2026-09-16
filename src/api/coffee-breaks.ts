@@ -5,6 +5,8 @@ const auth = (token: string) => ({ headers: { Authorization: `Bearer ${token}` }
 export type CoffeeParticipant = {
   id: string;
   anonymousUsername: string;
+  publicAvatarUrl?: string | null;
+  publicFlair?: string | null;
   joinedAt: string;
   hasLeft: boolean;
 };
@@ -13,7 +15,7 @@ export type CoffeeMessage = {
   id: string;
   text: string;
   createdAt: string;
-  sender: { id: string; anonymousUsername: string };
+  sender: { id: string; anonymousUsername: string; publicAvatarUrl?: string | null; publicFlair?: string | null };
 };
 
 export type CoffeeBreakRoom = {
