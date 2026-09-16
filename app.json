@@ -7,8 +7,8 @@
     "icon": "./assets/images/breakroom-playstore-icon.png",
     "scheme": "breakroom",
     "userInterfaceStyle": "automatic",
-    "backgroundColor": "#1C1411",
-    "primaryColor": "#47B7A7",
+    "backgroundColor": "#172325",
+    "primaryColor": "#2C8B83",
     "ios": {
       "icon": "./assets/expo.icon"
     },
@@ -18,15 +18,15 @@
       "softwareKeyboardLayoutMode": "resize",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#2B252E",
+        "backgroundColor": "#2B393B",
         "foregroundImage": "./assets/images/breakroom-playstore-icon.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "themeColor": "#2B252E",
-      "backgroundColor": "#1C1411",
+      "themeColor": "#2B393B",
+      "backgroundColor": "#F4F1EB",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -40,7 +40,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#2B252E",
+          "backgroundColor": "#2B393B",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
