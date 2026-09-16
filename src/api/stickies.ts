@@ -9,7 +9,9 @@ export type DeskStickyNote = {
   author: { id: string; anonymousUsername: string; publicAvatarUrl?: string | null; publicFlair?: string | null };
   _count: { applauds: number };
   applaudedByMe: boolean;
-  comments: Array<{ id: string; text: string; authorReply?: string | null; authorRepliedAt?: string | null; createdAt: string; author: { id: string; anonymousUsername: string; publicAvatarUrl?: string | null; publicFlair?: string | null } }>;
+  isUnavailable?: boolean;
+  unavailableReason?: "MODERATOR" | "AUTHOR" | null;
+  comments: Array<{ id: string; text: string; authorReply?: string | null; authorRepliedAt?: string | null; createdAt: string; isUnavailable?: boolean; unavailableReason?: "MODERATOR" | "AUTHOR" | null; author: { id: string; anonymousUsername: string; publicAvatarUrl?: string | null; publicFlair?: string | null } }>;
 };
 
 export async function getStickyNotes(token: string) { return (await api.get("/api/stickies", auth(token))).data.notes as DeskStickyNote[]; }

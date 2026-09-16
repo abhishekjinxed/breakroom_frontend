@@ -6,14 +6,14 @@ const THEME_PREFERENCE_KEY = "breakroom_theme_preference";
 export type ThemePreference = "system" | "light" | "dark";
 
 const lightColors = {
-  canvas: "#FFF6EA", surface: "#FFFCF7", surfaceSoft: "#F4E3CF", navy: "#2B252E", navyMuted: "#6F5B52", teal: "#47B7A7", tealSoft: "#DDF4EE", mint: "#F2B84B", green: "#3B8B6E", greenSoft: "#DFF2EA", violet: "#8F5A78", violetSoft: "#F3E4EE", amber: "#C9892E", amberSoft: "#FFF0C9", text: "#32241E", muted: "#806A5D", border: "#E8D3B7", danger: "#BF463D",
+  canvas: "#F4F1EB", surface: "#FFFDFC", surfaceSoft: "#ECE7DE", navy: "#26363A", navyMuted: "#657276", teal: "#2C8B83", tealSoft: "#DCEFEA", mint: "#C89155", green: "#4E8A70", greenSoft: "#DDEEE4", violet: "#8C6378", violetSoft: "#F0E5EA", amber: "#B87836", amberSoft: "#F7E7CB", text: "#263035", muted: "#697477", border: "#DDD5C9", danger: "#B84942",
   onAccent: "#FFFFFF",
-  hero: "#2B252E",
-  heroAccent: "#5B3B31",
+  hero: "#2B393B",
+  heroAccent: "#A97950",
 };
 
 const darkColors = {
-  canvas: "#1C1411", surface: "#2B252E", surfaceSoft: "#3A2C26", navy: "#FFF1E4", navyMuted: "#D5BAA5", teal: "#67D2C0", tealSoft: "#1E4F49", mint: "#F6C96A", green: "#9BD1A4", greenSoft: "#244534", violet: "#E0A6C7", violetSoft: "#563747", amber: "#F4C66D", amberSoft: "#5A431D", text: "#FFF6EA", muted: "#D1B9A7", border: "#543C33", danger: "#FF938A", onAccent: "#251810", hero: "#2B252E", heroAccent: "#5D3B32",
+  canvas: "#172325", surface: "#223236", surfaceSoft: "#2C3B3E", navy: "#F4F0E8", navyMuted: "#C5D0CE", teal: "#76D0C4", tealSoft: "#1F514D", mint: "#D5A46A", green: "#A0D0AF", greenSoft: "#244C3B", violet: "#D9A9C2", violetSoft: "#553C4A", amber: "#E3B36E", amberSoft: "#59482B", text: "#F4F0E8", muted: "#B9C4C2", border: "#3E5354", danger: "#FF9A90", onAccent: "#162527", hero: "#1D2B2E", heroAccent: "#79573D",
 };
 
 export type AppTheme = typeof lightColors;

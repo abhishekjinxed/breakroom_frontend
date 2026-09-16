@@ -32,6 +32,7 @@ interface Message {
   senderId: string;
   text: string;
   createdAt: string;
+  isUnavailable?: boolean;
 }
 
 export default function ChatScreen() {
@@ -300,33 +301,34 @@ export default function ChatScreen() {
   }
 
   function reportMessage(message: Message) {
-    if (!token || message.senderId === user?.id) return;
+    if (!token || message.senderId === user?.id || message.isUnavailable) return;
     Alert.alert("Report message?", "The message and sender will be sent to the moderation team for review.", [{ text: "Cancel", style: "cancel" }, { text: "Report", style: "destructive", onPress: async () => { try { await reportContent(token, "MESSAGE", message.id, "Inappropriate chat message"); Alert.alert("Report received", "Thank you. A moderator will review it."); } catch (error: any) { Alert.alert("Couldn’t report message", error?.response?.data?.message ?? "Please try again."); } } }]);
   }
 
   function renderMessage({ item }: { item: Message }) {
     const isOwnMessage = item.senderId === user?.id;
+    const unavailable = !!item.isUnavailable;
 
     return (
       <View
         style={[
           styles.messageRow,
-          isOwnMessage ? styles.ownMessageRow : styles.otherMessageRow,
+          unavailable ? styles.unavailableMessageRow : isOwnMessage ? styles.ownMessageRow : styles.otherMessageRow,
         ]}
       >
         <TouchableOpacity
-          activeOpacity={isOwnMessage ? 1 : 0.78}
-          onLongPress={() => reportMessage(item)}
+          activeOpacity={isOwnMessage || unavailable ? 1 : 0.78}
+          onLongPress={() => !unavailable && reportMessage(item)}
           delayLongPress={450}
           style={[
             styles.messageBubble,
-            isOwnMessage ? styles.ownMessageBubble : styles.otherMessageBubble,
+            unavailable ? styles.unavailableMessageBubble : isOwnMessage ? styles.ownMessageBubble : styles.otherMessageBubble,
           ]}
         >
           <Text
             style={[
               styles.messageText,
-              isOwnMessage ? styles.ownMessageText : styles.otherMessageText,
+              unavailable ? styles.unavailableMessageText : isOwnMessage ? styles.ownMessageText : styles.otherMessageText,
             ]}
           >
             {item.text}
@@ -550,6 +552,9 @@ const styles = StyleSheet.create({
   otherMessageText: {
     color: Brand.colors.text,
   },
+  unavailableMessageRow: { alignItems: "center" },
+  unavailableMessageBubble: { backgroundColor: Brand.colors.tealSoft, borderWidth: 1, borderColor: Brand.colors.border, paddingVertical: 8 },
+  unavailableMessageText: { color: Brand.colors.muted, fontSize: 13, fontStyle: "italic" },
 
   emptyList: {
     flexGrow: 1,
