@@ -7,8 +7,8 @@
     "icon": "./assets/images/breakroom-playstore-icon.png",
     "scheme": "breakroom",
     "userInterfaceStyle": "automatic",
-    "backgroundColor": "#0D1720",
-    "primaryColor": "#147A78",
+    "backgroundColor": "#1C1411",
+    "primaryColor": "#47B7A7",
     "ios": {
       "icon": "./assets/expo.icon"
     },
@@ -18,15 +18,15 @@
       "softwareKeyboardLayoutMode": "resize",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#172B4D",
+        "backgroundColor": "#2B252E",
         "foregroundImage": "./assets/images/breakroom-playstore-icon.png"
       },
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "themeColor": "#17324D",
-      "backgroundColor": "#0D1720",
+      "themeColor": "#2B252E",
+      "backgroundColor": "#1C1411",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -40,7 +40,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#2B252E",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
@@ -58,7 +58,7 @@
       [
         "expo-notifications",
         {
-          "color": "#A76134",
+          "color": "#D45D45",
           "defaultChannel": "breakroom-alerts-v3",
           "sounds": [
             "./assets/sounds/paper_plane_landing.wav"
