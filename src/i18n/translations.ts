@@ -21,6 +21,7 @@ const en = {
   pulse: "Pulse",
   briefs: "Briefs",
   connect: "Connect",
+  play: "Play",
   loading: "Getting things ready...",
   loginTitle: "A better workday break.",
   loginText: "Sign in with your Google account to join your workplace community.",
@@ -52,7 +53,7 @@ const en = {
 };
 
 const hi: typeof en = {
-  home: "होम", pulse: "पल्स", briefs: "संक्षेप", connect: "जुड़ें", loading: "तैयारी की जा रही है...",
+  home: "होम", pulse: "पल्स", briefs: "संक्षेप", connect: "जुड़ें", play: "खेलें", loading: "तैयारी की जा रही है...",
   loginTitle: "काम के बीच बेहतर ब्रेक.", loginText: "अपनी कार्यस्थल कम्युनिटी में जुड़ने के लिए Google से साइन इन करें.", continueGoogle: "Google से जारी रखें",
   greeting: "आपको फिर देखकर अच्छा लगा,", account: "खाता", signOut: "साइन आउट", available: "ब्रेक के लिए उपलब्ध",
   heroEyebrow: "आपका कार्यदिवस, तरोताज़ा", heroTitle: "व्यस्तता से एक\nसोच-समझकर ब्रेक लें.", heroText: "इनबॉक्स से दूर, एक त्वरित गुमनाम बातचीत के लिए किसी दूसरे प्रोफेशनल से मिलें.",
@@ -62,7 +63,7 @@ const hi: typeof en = {
 };
 
 const es: typeof en = {
-  home: "Inicio", pulse: "Pulso", briefs: "Breves", connect: "Conectar", loading: "Preparando todo...",
+  home: "Inicio", pulse: "Pulso", briefs: "Breves", connect: "Conectar", play: "Jugar", loading: "Preparando todo...",
   loginTitle: "Una mejor pausa laboral.", loginText: "Inicia sesión con Google para unirte a tu comunidad de trabajo.", continueGoogle: "Continuar con Google",
   greeting: "Qué bueno verte,", account: "Cuenta", signOut: "Cerrar sesión", available: "DISPONIBLE PARA UNA PAUSA",
   heroEyebrow: "RECARGA TU JORNADA", heroTitle: "Tómate una pausa\ncon intención.", heroText: "Conoce a otro profesional para una conversación breve y anónima lejos del correo.",
@@ -72,7 +73,7 @@ const es: typeof en = {
 };
 
 const fr: typeof en = {
-  home: "Accueil", pulse: "Pouls", briefs: "Brèves", connect: "Se connecter", loading: "Préparation en cours...",
+  home: "Accueil", pulse: "Pouls", briefs: "Brèves", connect: "Se connecter", play: "Jouer", loading: "Préparation en cours...",
   loginTitle: "Une meilleure pause au travail.", loginText: "Connectez-vous avec Google pour rejoindre votre communauté professionnelle.", continueGoogle: "Continuer avec Google",
   greeting: "Ravi de vous revoir,", account: "Compte", signOut: "Se déconnecter", available: "DISPONIBLE POUR UNE PAUSE",
   heroEyebrow: "RECHARGEZ VOTRE JOURNÉE", heroTitle: "Prenez une pause\nqui compte.", heroText: "Rencontrez un autre professionnel pour une conversation rapide et anonyme loin de votre boîte mail.",
@@ -82,7 +83,7 @@ const fr: typeof en = {
 };
 
 const de: typeof en = {
-  home: "Start", pulse: "Puls", briefs: "Kurzinfos", connect: "Verbinden", loading: "Alles wird vorbereitet...",
+  home: "Start", pulse: "Puls", briefs: "Kurzinfos", connect: "Verbinden", play: "Spielen", loading: "Alles wird vorbereitet...",
   loginTitle: "Eine bessere Arbeitspause.", loginText: "Melden Sie sich mit Google an, um Ihrer Arbeitsgemeinschaft beizutreten.", continueGoogle: "Mit Google fortfahren",
   greeting: "Schön, Sie zu sehen,", account: "Konto", signOut: "Abmelden", available: "BEREIT FÜR EINE PAUSE",
   heroEyebrow: "NEUE ENERGIE FÜR DEN ARBEITSTAG", heroTitle: "Machen Sie eine\nbewusste Pause.", heroText: "Treffen Sie einen anderen Profi für ein kurzes, anonymes Gespräch abseits des Posteingangs.",
@@ -92,7 +93,7 @@ const de: typeof en = {
 };
 
 const pt: typeof en = {
-  home: "Início", pulse: "Pulso", briefs: "Resumos", connect: "Conectar", loading: "Preparando tudo...",
+  home: "Início", pulse: "Pulso", briefs: "Resumos", connect: "Conectar", play: "Jogar", loading: "Preparando tudo...",
   loginTitle: "Uma pausa melhor no trabalho.", loginText: "Entre com sua conta do Google para participar da comunidade de trabalho.", continueGoogle: "Continuar com Google",
   greeting: "Que bom ver você,", account: "Conta", signOut: "Sair", available: "DISPONÍVEL PARA UMA PAUSA",
   heroEyebrow: "RECUPERE SUA ENERGIA", heroTitle: "Faça uma pausa\ncom propósito.", heroText: "Encontre outro profissional para uma conversa rápida e anônima longe da caixa de entrada.",
@@ -102,7 +103,7 @@ const pt: typeof en = {
 };
 
 const ar: typeof en = {
-  home: "الرئيسية", pulse: "نبض", briefs: "لمحات", connect: "تواصل", loading: "جارٍ تجهيز كل شيء...",
+  home: "الرئيسية", pulse: "نبض", briefs: "لمحات", connect: "تواصل", play: "العب", loading: "جارٍ تجهيز كل شيء...",
   loginTitle: "استراحة أفضل في يوم العمل.", loginText: "سجّل الدخول بحساب Google للانضمام إلى مجتمع مكان العمل.", continueGoogle: "المتابعة باستخدام Google",
   greeting: "سعداء برؤيتك،", account: "الحساب", signOut: "تسجيل الخروج", available: "متاح لاستراحة",
   heroEyebrow: "جدّد طاقتك في يوم العمل", heroTitle: "خذ استراحة\nهادفة.", heroText: "تواصل مع محترف آخر لإجراء محادثة سريعة ومجهولة بعيدًا عن البريد الوارد.",
@@ -112,7 +113,7 @@ const ar: typeof en = {
 };
 
 const ja: typeof en = {
-  home: "ホーム", pulse: "パルス", briefs: "ブリーフ", connect: "つながる", loading: "準備しています...",
+  home: "ホーム", pulse: "パルス", briefs: "ブリーフ", connect: "つながる", play: "遊ぶ", loading: "準備しています...",
   loginTitle: "より良い仕事の休憩を。", loginText: "Google アカウントでログインして、職場コミュニティに参加しましょう。", continueGoogle: "Google で続ける",
   greeting: "おかえりなさい、", account: "アカウント", signOut: "ログアウト", available: "休憩できます",
   heroEyebrow: "仕事の一日に、リフレッシュを", heroTitle: "忙しさから少し\n意識的に離れよう。", heroText: "受信トレイから離れて、ほかのプロフェッショナルと短く匿名で話しましょう。",
@@ -122,7 +123,7 @@ const ja: typeof en = {
 };
 
 const ta: typeof en = {
-  home: "முகப்பு", pulse: "பல்ஸ்", briefs: "சுருக்கங்கள்", connect: "இணையுங்கள்", loading: "தயாராகிறது...",
+  home: "முகப்பு", pulse: "பல்ஸ்", briefs: "சுருக்கங்கள்", connect: "இணையுங்கள்", play: "விளையாடு", loading: "தயாராகிறது...",
   loginTitle: "வேலை நாளுக்கான சிறந்த இடைவேளை.", loginText: "உங்கள் பணியிட சமூகத்தில் சேர Google கணக்கில் உள்நுழையவும்.", continueGoogle: "Google மூலம் தொடரவும்",
   greeting: "உங்களை மீண்டும் பார்ப்பதில் மகிழ்ச்சி,", account: "கணக்கு", signOut: "வெளியேறு", available: "இடைவேளைக்குத் தயாராக உள்ளீர்கள்",
   heroEyebrow: "உங்கள் வேலைநாளை புதுப்பிக்கவும்", heroTitle: "பரபரப்பில் இருந்து\nசிந்தித்துச் சிறிது ஓய்வெடுங்கள்.", heroText: "இன்பாக்ஸிலிருந்து விலகி, மற்றொரு தொழில்முறையருடன் விரைவான அநாமதேய உரையாடலைத் தொடங்குங்கள்.",
@@ -132,7 +133,7 @@ const ta: typeof en = {
 };
 
 const id: typeof en = {
-  home: "Beranda", pulse: "Pulse", briefs: "Ringkasan", connect: "Terhubung", loading: "Menyiapkan semuanya...",
+  home: "Beranda", pulse: "Pulse", briefs: "Ringkasan", connect: "Terhubung", play: "Main", loading: "Menyiapkan semuanya...",
   loginTitle: "Waktu istirahat kerja yang lebih baik.", loginText: "Masuk dengan akun Google Anda untuk bergabung dengan komunitas tempat kerja.", continueGoogle: "Lanjutkan dengan Google",
   greeting: "Senang bertemu lagi,", account: "Akun", signOut: "Keluar", available: "TERSEDIA UNTUK ISTIRAHAT",
   heroEyebrow: "SEGARKAN HARI KERJA ANDA", heroTitle: "Ambil jeda yang\nbermakna.", heroText: "Temui profesional lain untuk percakapan singkat dan anonim jauh dari kotak masuk.",

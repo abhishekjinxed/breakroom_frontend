@@ -8,11 +8,11 @@ export async function deleteAccount(token: string) { return (await api.delete("/
 
 export type ModerationReport = {
   id: string;
-  targetType: "PULSE" | "NOTE" | "MESSAGE" | "USER";
+  targetType: "PULSE" | "NOTE" | "MESSAGE" | "USER" | "STICKY_NOTE" | "STICKY_COMMENT" | "COFFEE_MESSAGE";
   targetId: string;
   reason: string;
   details: string | null;
-  status: "OPEN" | "REVIEWED" | "DISMISSED";
+  status: "OPEN" | "REVIEWED" | "DISMISSED" | "ACTIONED";
   createdAt: string;
   reviewedAt: string | null;
   reporter: { id: string; anonymousUsername: string };
@@ -22,3 +22,4 @@ export type ModerationReport = {
 export async function getModeratorStatus(token: string) { return (await api.get("/api/safety/moderation/status", auth(token))).data.isModerator as boolean; }
 export async function getModerationReports(token: string) { return (await api.get("/api/safety/moderation/reports", auth(token))).data.reports as ModerationReport[]; }
 export async function resolveModerationReport(token: string, reportId: string, status: "REVIEWED" | "DISMISSED") { return (await api.patch(`/api/safety/moderation/reports/${reportId}`, { status }, auth(token))).data; }
+export async function disableReportedContent(token: string, reportId: string) { return (await api.patch(`/api/safety/moderation/reports/${reportId}`, { action: "DISABLE" }, auth(token))).data; }
