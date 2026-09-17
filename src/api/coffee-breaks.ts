@@ -16,6 +16,7 @@ export type CoffeeMessage = {
   text: string;
   createdAt: string;
   sender: { id: string; anonymousUsername: string; publicAvatarUrl?: string | null; publicFlair?: string | null };
+  isSystem?: boolean;
 };
 
 export type CoffeeBreakRoom = {
