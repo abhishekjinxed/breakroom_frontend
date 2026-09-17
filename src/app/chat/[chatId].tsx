@@ -16,9 +16,7 @@ import {
 } from "react-native";
 
 import { getSocket } from "../../services/socket";
-import { leaveBored } from "../../api/bored";
 import { getChatMessages } from "../../api/chat";
-import { requestWorkCircleFromChat } from "../../api/work-circle";
 import { deleteDirectConversation, getDirectConversation, updateChatPhotoSharing, updateProfileSharing } from "../../api/inbox";
 import { Brand } from "../../constants/brand";
 import { useAuth } from "../../context/AuthContext";
@@ -42,7 +40,7 @@ export default function ChatScreen() {
     chatId: string;
     direct?: string;
   }>();
-  const isDirect = direct === "1";
+  const isDirect = true;
 
   const [messages, setMessages] = useState<Message[]>([]);
 
@@ -236,27 +234,7 @@ export default function ChatScreen() {
     inputRef.current?.focus();
   }
 
-  async function handleLeaveChat() {
-    if (isDirect) {
-      router.back();
-      return;
-    }
-    try {
-      if (token) {
-        await leaveBored(token);
-      }
-    } catch (error) {
-      console.error("LEAVE CHAT ERROR:", error);
-    } finally {
-      router.replace("/");
-    }
-  }
-
-  async function addToWorkCircle() {
-    if (!token || !chatId || isDirect) return;
-    try { const result = await requestWorkCircleFromChat(token, chatId); Alert.alert("Work Circle", result.message ?? "Connection request sent."); }
-    catch (error: any) { Alert.alert("Work Circle", error?.response?.data?.message ?? "We could not send the request."); }
-  }
+  function handleLeaveChat() { router.back(); }
 
   function confirmDeleteConversation() {
     if (!token || !chatId) return;
@@ -351,11 +329,11 @@ export default function ChatScreen() {
           onPress={handleLeaveChat}
           style={styles.backButton}
         >
-          <Text style={[styles.leaveText, { color: isDirect ? colors.teal : Brand.colors.danger }]}>{isDirect ? "Back" : "Leave chat"}</Text>
+          <Text style={[styles.leaveText, { color: colors.teal }]}>Back</Text>
         </TouchableOpacity>
 
         <TouchableOpacity disabled={!isDirect || !profileSharing.canViewMemberProfile} onPress={openMemberProfile} style={styles.headerCenter}>
-          {isDirect && otherMember ? <View style={styles.chatIdentity}><PublicAvatar member={otherMember} size={26} backgroundColor={colors.violetSoft} color={colors.violet} /><PublicFlair member={otherMember} nameColor={colors.navy} flairColor={colors.muted} compact /></View> : <Text style={[styles.username, { color: colors.navy }]}>{isDirect ? "Work Circle" : "Breakroom chat"}</Text>}
+          {otherMember ? <View style={styles.chatIdentity}><PublicAvatar member={otherMember} size={26} backgroundColor={colors.violetSoft} color={colors.violet} /><PublicFlair member={otherMember} nameColor={colors.navy} flairColor={colors.muted} compact /></View> : <Text style={[styles.username, { color: colors.navy }]}>Breakroom chat</Text>}
 
           <Text
             style={[
@@ -377,7 +355,7 @@ export default function ChatScreen() {
           </Text>
         </TouchableOpacity>
 
-        {isDirect ? <TouchableOpacity onPress={() => setOptionsOpen(true)} style={styles.circleLink}><Text style={styles.circleLinkText}>•••</Text></TouchableOpacity> : <TouchableOpacity onPress={addToWorkCircle} style={styles.circleLink}><Text style={styles.circleLinkText}>Add</Text></TouchableOpacity>}
+        <TouchableOpacity onPress={() => setOptionsOpen(true)} style={styles.circleLink}><Text style={styles.circleLinkText}>•••</Text></TouchableOpacity>
       </View>
 
       {/* MESSAGES */}

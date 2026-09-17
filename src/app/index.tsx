@@ -110,25 +110,6 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          style={[styles.infoRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          activeOpacity={0.85}
-          onPress={() => router.push("/office-pulse")}
-        >
-          <View style={[styles.infoIcon, { backgroundColor: colors.amberSoft }]}>
-            <Text style={[styles.infoIconText, { color: colors.amber }]}>P</Text>
-          </View>
-          <View style={styles.infoCopy}>
-            <Text style={[styles.infoTitle, { color: colors.text }]}>{t("officePulse")}</Text>
-            <Text style={[styles.infoText, { color: colors.muted }]}>{t("officePulseText")}</Text>
-          </View>
-          <Text style={[styles.infoArrow, { color: colors.teal }]}>→</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={[styles.cultureCard, { backgroundColor: colors.violetSoft, borderColor: colors.violet }]} onPress={() => router.push("/culture-hub" as any)}>
-          <Text style={[styles.briefEyebrow, { color: colors.violet }]}>CULTURE HUB</Text>
-          <Text style={[styles.briefTitle, { color: colors.navy }]}>Coffee Pairing, desk prompts, appreciation, and more →</Text>
-        </TouchableOpacity>
         <Text style={[styles.footerText, { color: colors.muted }]}>{t("communitySafety")}</Text>
       </ScrollView>
     </SafeAreaView>
