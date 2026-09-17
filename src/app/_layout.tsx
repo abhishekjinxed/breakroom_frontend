@@ -11,6 +11,7 @@ import { LanguageProvider } from "../context/LanguageContext";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import { AppBottomNav } from "../components/AppBottomNav";
 import { TermsGate } from "../components/TermsGate";
+import { DateOfBirthGate } from "../components/DateOfBirthGate";
 import { NotificationProvider } from "../context/NotificationContext";
 import { notificationRoute } from "../services/push-notifications";
 import { AppTourProvider } from "../context/TourContext";
@@ -51,7 +52,8 @@ function RootNavigator() {
     return () => subscription.remove();
   }, []);
 
-  const hideNavigation = pathname.startsWith("/chat/") || pathname.startsWith("/auth/");
+  const needsDateOfBirth = !!user && !user.dateOfBirth;
+  const hideNavigation = pathname.startsWith("/chat/") || pathname.startsWith("/auth/") || needsDateOfBirth;
 
   return (
     <View style={{ flex: 1 }}>
@@ -61,7 +63,8 @@ function RootNavigator() {
         <Stack screenOptions={{ headerShown: false }} />
       </View>
       {!!token && !hideNavigation && <AppBottomNav />}
-      {!!user && !user.termsAcceptedAt && <TermsGate />}
+      {!!user && !user.termsAcceptedAt && !needsDateOfBirth && <TermsGate />}
+      {needsDateOfBirth && <DateOfBirthGate />}
     </View>
   );
 }
