@@ -13,10 +13,11 @@ import { AppBottomNav } from "../components/AppBottomNav";
 import { TermsGate } from "../components/TermsGate";
 import { NotificationProvider } from "../context/NotificationContext";
 import { notificationRoute } from "../services/push-notifications";
+import { AppTourProvider } from "../context/TourContext";
 
 export default function RootLayout() {
   return (
-    <ThemeProvider><LanguageProvider><AuthProvider><NotificationProvider><RootNavigator /></NotificationProvider></AuthProvider></LanguageProvider></ThemeProvider>
+    <ThemeProvider><LanguageProvider><AuthProvider><AppTourProvider><NotificationProvider><RootNavigator /></NotificationProvider></AppTourProvider></AuthProvider></LanguageProvider></ThemeProvider>
   );
 }
 
