@@ -23,3 +23,4 @@ export async function getModeratorStatus(token: string) { return (await api.get(
 export async function getModerationReports(token: string) { return (await api.get("/api/safety/moderation/reports", auth(token))).data.reports as ModerationReport[]; }
 export async function resolveModerationReport(token: string, reportId: string, status: "REVIEWED" | "DISMISSED") { return (await api.patch(`/api/safety/moderation/reports/${reportId}`, { status }, auth(token))).data; }
 export async function disableReportedContent(token: string, reportId: string) { return (await api.patch(`/api/safety/moderation/reports/${reportId}`, { action: "DISABLE" }, auth(token))).data; }
+export async function disableMemberAccount(token: string, userId: string) { return (await api.post(`/api/safety/moderation/members/${userId}/disable`, {}, auth(token))).data as { success: boolean; alreadyDisabled: boolean }; }
