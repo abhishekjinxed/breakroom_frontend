@@ -57,6 +57,9 @@ export default function ChatScreen() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const [reportTarget, setReportTarget] = useState<Message | null>(null);
+  const [reportBusy, setReportBusy] = useState(false);
+  const [reportNotice, setReportNotice] = useState<string | null>(null);
   const [profileBusy, setProfileBusy] = useState(false);
   const [otherMember, setOtherMember] = useState<PublicIdentity | null>(null);
   const [profileSharing, setProfileSharing] = useState({ isSharingMyProfile: false, canViewMemberProfile: false, memberId: null as string | null, photos: [] as Array<{ id: string; url: string; visibility: "PRIVATE" | "PUBLIC"; createdAt: string; sharedWithMember: boolean }> });
@@ -280,8 +283,10 @@ export default function ChatScreen() {
 
   function reportMessage(message: Message) {
     if (!token || message.senderId === user?.id || message.isUnavailable) return;
-    Alert.alert("Report message?", "The message and sender will be sent to the moderation team for review.", [{ text: "Cancel", style: "cancel" }, { text: "Report", style: "destructive", onPress: async () => { try { await reportContent(token, "MESSAGE", message.id, "Inappropriate chat message"); Alert.alert("Report received", "Thank you. A moderator will review it."); } catch (error: any) { Alert.alert("Couldn’t report message", error?.response?.data?.message ?? "Please try again."); } } }]);
+    setReportNotice(null);
+    setReportTarget(message);
   }
+  async function confirmReportMessage() { if (!token || !reportTarget || reportBusy) return; try { setReportBusy(true); await reportContent(token, "MESSAGE", reportTarget.id, "Inappropriate chat message"); setReportNotice("Report received. A moderator will review it."); } catch (error: any) { setReportNotice(error?.response?.data?.message ?? "Couldn’t report message. Please try again."); } finally { setReportBusy(false); } }
 
   function renderMessage({ item }: { item: Message }) {
     const isOwnMessage = item.senderId === user?.id;
@@ -312,6 +317,7 @@ export default function ChatScreen() {
             {item.text}
           </Text>
         </TouchableOpacity>
+        {!unavailable && !isOwnMessage && <TouchableOpacity accessibilityRole="button" accessibilityLabel="Report message" onPress={() => reportMessage(item)} style={[styles.messageReport, { borderColor: colors.border }]}><Text style={[styles.messageReportText, { color: colors.muted }]}>•••</Text></TouchableOpacity>}
       </View>
     );
   }
@@ -427,6 +433,7 @@ export default function ChatScreen() {
         </TouchableOpacity>
       </View>
       <Modal transparent visible={deleteOpen} animationType="fade" onRequestClose={() => setDeleteOpen(false)}><View style={styles.deleteBackdrop}><View style={[styles.deleteCard, { backgroundColor: colors.surface }]}><Text style={[styles.deleteTitle, { color: colors.navy }]}>Delete conversation?</Text><Text style={[styles.deleteCopy, { color: colors.muted }]}>This removes the private chat for both people and ends the Work Circle connection.</Text>{deleteError && <Text style={styles.deleteError}>{deleteError}</Text>}<View style={styles.deleteActions}><TouchableOpacity disabled={deleting} onPress={() => setDeleteOpen(false)} style={[styles.cancelDelete, { borderColor: colors.border }]}><Text style={[styles.cancelDeleteText, { color: colors.muted }]}>Cancel</Text></TouchableOpacity><TouchableOpacity disabled={deleting} onPress={deleteConversation} style={styles.confirmDelete}><Text style={styles.confirmDeleteText}>{deleting ? "Deleting…" : "Delete"}</Text></TouchableOpacity></View></View></View></Modal>
+      <Modal transparent visible={!!reportTarget} animationType="fade" onRequestClose={() => !reportBusy && setReportTarget(null)}><View style={styles.deleteBackdrop}><View style={[styles.deleteCard, { backgroundColor: colors.surface }]}><Text style={[styles.deleteTitle, { color: colors.navy }]}>Report message?</Text><Text style={[styles.deleteCopy, { color: colors.muted }]}>This message and its sender will be sent to the moderation team for review.</Text>{reportNotice && <Text style={[styles.deleteError, { color: reportNotice.startsWith("Report received") ? colors.teal : colors.danger }]}>{reportNotice}</Text>}<View style={styles.deleteActions}><TouchableOpacity disabled={reportBusy} onPress={() => setReportTarget(null)} style={[styles.cancelDelete, { borderColor: colors.border }]}><Text style={[styles.cancelDeleteText, { color: colors.muted }]}>Cancel</Text></TouchableOpacity><TouchableOpacity disabled={reportBusy || reportNotice?.startsWith("Report received")} onPress={confirmReportMessage} style={styles.confirmDelete}><Text style={styles.confirmDeleteText}>{reportBusy ? "Reporting…" : "Report"}</Text></TouchableOpacity></View></View></View></Modal>
       <Modal transparent visible={optionsOpen} animationType="fade" onRequestClose={() => setOptionsOpen(false)}><View style={styles.deleteBackdrop}><View style={[styles.deleteCard, { backgroundColor: colors.surface }]}><Text style={[styles.deleteTitle, { color: colors.navy }]}>Conversation options</Text><Text style={[styles.deleteCopy, { color: colors.muted }]}>Profiles are private unless each person chooses to share theirs in this chat.</Text><TouchableOpacity disabled={profileBusy} onPress={toggleProfileSharing} style={[styles.optionAction, { borderColor: colors.border }]}><Text style={[styles.optionActionText, { color: colors.text }]}>{profileBusy ? "Saving…" : profileSharing.isSharingMyProfile ? "Stop sharing my profile" : "Share my profile"}</Text><Text style={[styles.optionHint, { color: colors.muted }]}>{profileSharing.isSharingMyProfile ? "The other person can now open your profile." : "Only the other person in this chat can view it."}</Text></TouchableOpacity>{profileSharing.photos.length > 0 && <View style={[styles.photoShareSection, { borderColor: colors.border }]}><Text style={[styles.photoShareTitle, { color: colors.text }]}>Share photos with this person</Text><Text style={[styles.optionHint, { color: colors.muted }]}>Public photos are visible to everyone. Turn on a private photo to share only here.</Text><View style={styles.chatPhotos}>{profileSharing.photos.map((photo) => <TouchableOpacity key={photo.id} disabled={profileBusy} onPress={() => toggleChatPhoto(photo.id, !photo.sharedWithMember)} style={[styles.chatPhotoTile, { borderColor: photo.sharedWithMember ? colors.teal : colors.border }]}><Image source={{ uri: photo.url }} style={styles.chatPhoto} /><Text style={[styles.chatPhotoLabel, { color: photo.sharedWithMember ? colors.teal : colors.muted }]}>{photo.visibility === "PUBLIC" ? "Public" : photo.sharedWithMember ? "Shared here" : "Private"}</Text></TouchableOpacity>)}</View></View>}{profileSharing.canViewMemberProfile && <TouchableOpacity onPress={() => { setOptionsOpen(false); openMemberProfile(); }} style={[styles.optionAction, { borderColor: colors.border }]}><Text style={[styles.optionActionText, { color: colors.teal }]}>View their profile</Text></TouchableOpacity>}<TouchableOpacity onPress={() => { setOptionsOpen(false); confirmDeleteConversation(); }} style={[styles.optionAction, { borderColor: colors.border }]}><Text style={styles.deleteLinkText}>Delete conversation</Text></TouchableOpacity><TouchableOpacity onPress={() => setOptionsOpen(false)} style={styles.closeOptions}><Text style={[styles.cancelDeleteText, { color: colors.muted }]}>Cancel</Text></TouchableOpacity></View></View></Modal>
     </KeyboardAvoidingView>
   );
@@ -491,6 +498,9 @@ const styles = StyleSheet.create({
 
   messageRow: {
     marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
   },
 
   ownMessageRow: {
@@ -500,6 +510,8 @@ const styles = StyleSheet.create({
   otherMessageRow: {
     alignItems: "flex-start",
   },
+  messageReport: { width: 34, height: 32, borderWidth: 1, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  messageReportText: { fontSize: 14, fontWeight: "900", marginTop: -4 },
 
   messageBubble: {
     maxWidth: "80%",
