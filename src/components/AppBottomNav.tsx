@@ -10,9 +10,9 @@ import { getSocket } from "../services/socket";
 
 const items = [
   { label: "home", icon: "⌂", route: "/" },
-  { label: "play", icon: "⊞", route: "/games" },
   { label: "inbox", icon: "✉", route: "/inbox" },
   { label: "alerts", icon: "!", route: "/notifications" },
+  { label: "account", icon: "◉", route: "/account" },
 ] as const;
 
 export function AppBottomNav() {
