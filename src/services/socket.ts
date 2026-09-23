@@ -3,6 +3,7 @@ import { io, Socket } from "socket.io-client";
 import { API_URL } from "../api/client";
 
 let socket: Socket | null = null;
+let appIsForeground = true;
 
 export function connectSocket(token: string) {
   if (socket) {
@@ -22,6 +23,7 @@ export function connectSocket(token: string) {
 
   socket.on("connect", () => {
     console.log("🔌 Socket connected:", socket?.id);
+    socket?.emit("app:presence", { foreground: appIsForeground });
   });
 
   socket.on("disconnect", (reason) => {
@@ -37,6 +39,11 @@ export function connectSocket(token: string) {
 
 export function getSocket() {
   return socket;
+}
+
+export function setSocketAppForeground(foreground: boolean) {
+  appIsForeground = foreground;
+  socket?.emit("app:presence", { foreground });
 }
 
 export function disconnectSocket() {

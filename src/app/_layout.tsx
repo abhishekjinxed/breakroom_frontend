@@ -1,10 +1,10 @@
 import { Stack, router, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { Platform, View } from "react-native";
+import { AppState, Platform, View } from "react-native";
 import * as Notifications from "expo-notifications";
 
-import { connectSocket, disconnectSocket } from "../services/socket";
+import { connectSocket, disconnectSocket, setSocketAppForeground } from "../services/socket";
 
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import { LanguageProvider } from "../context/LanguageContext";
@@ -42,6 +42,14 @@ function RootNavigator() {
       // AuthContext remains mounted during
       // navigation.
     };
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    const updatePresence = (state: string) => setSocketAppForeground(state === "active");
+    updatePresence(AppState.currentState);
+    const subscription = AppState.addEventListener("change", updatePresence);
+    return () => subscription.remove();
   }, [token]);
 
   useEffect(() => {
