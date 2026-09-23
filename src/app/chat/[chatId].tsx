@@ -17,7 +17,7 @@ import {
 
 import { getSocket } from "../../services/socket";
 import { getChatMessages } from "../../api/chat";
-import { deleteDirectConversation, getDirectConversation, updateChatPhotoSharing, updateProfileSharing } from "../../api/inbox";
+import { ChatConnection, ConversationPrompt, deleteDirectConversation, getDirectConversation, offerConversationPrompt, respondToConversationPrompt, updateChatPhotoSharing, updateFriendshipLevel, updateProfileSharing } from "../../api/inbox";
 import { Brand } from "../../constants/brand";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -61,6 +61,10 @@ export default function ChatScreen() {
   const [reportBusy, setReportBusy] = useState(false);
   const [reportNotice, setReportNotice] = useState<string | null>(null);
   const [profileBusy, setProfileBusy] = useState(false);
+  const [connection, setConnection] = useState<ChatConnection | null>(null);
+  const [connectionBusy, setConnectionBusy] = useState(false);
+  const [connectionNotice, setConnectionNotice] = useState<string | null>(null);
+  const [promptAnswer, setPromptAnswer] = useState("");
   const [otherMember, setOtherMember] = useState<PublicIdentity | null>(null);
   const [profileSharing, setProfileSharing] = useState({ isSharingMyProfile: false, canViewMemberProfile: false, memberId: null as string | null, photos: [] as Array<{ id: string; url: string; visibility: "PRIVATE" | "PUBLIC"; createdAt: string; sharedWithMember: boolean }> });
 
@@ -84,6 +88,7 @@ export default function ChatScreen() {
             setMessages(conversation.messages.map((message) => ({ ...message, chatId: message.chatId ?? chatId })));
             setProfileSharing(conversation.profileSharing);
             setOtherMember(conversation.otherMember);
+            setConnection(conversation.connection);
           }
         } else {
           const history = await getChatMessages(token, chatId);
@@ -160,7 +165,7 @@ export default function ChatScreen() {
       if (!isDirect || data.chatId !== chatId || !token) return;
       try {
         const conversation = await getDirectConversation(token, chatId);
-        if (!cancelled) setProfileSharing(conversation.profileSharing);
+        if (!cancelled) { setProfileSharing(conversation.profileSharing); setConnection(conversation.connection); }
       } catch {
         // The conversation may have been removed while the update was in flight.
       }
@@ -281,6 +286,41 @@ export default function ChatScreen() {
     } finally { setProfileBusy(false); }
   }
 
+  async function refreshConnection() {
+    if (!token || !chatId) return;
+    const conversation = await getDirectConversation(token, chatId);
+    setConnection(conversation.connection);
+  }
+
+  async function changeFriendship(action: "REQUEST" | "ACCEPT") {
+    if (!token || !chatId || connectionBusy) return;
+    try {
+      setConnectionBusy(true); setConnectionNotice(null);
+      const result = await updateFriendshipLevel(token, chatId, action);
+      setConnection(result.connection);
+      setConnectionNotice(action === "ACCEPT" ? "Friendship level updated together." : "Your chat partner can choose whether to accept this step.");
+    } catch (error: any) { setConnectionNotice(error?.response?.data?.message ?? "Could not update this friendship step."); }
+    finally { setConnectionBusy(false); }
+  }
+
+  async function offerPrompt() {
+    if (!token || !chatId || connectionBusy) return;
+    try { setConnectionBusy(true); setConnectionNotice(null); await offerConversationPrompt(token, chatId); await refreshConnection(); setConnectionNotice("A private shared question is waiting for both of you."); }
+    catch (error: any) { setConnectionNotice(error?.response?.data?.message ?? "Could not open a shared question."); }
+    finally { setConnectionBusy(false); }
+  }
+
+  async function respondToPrompt(prompt: ConversationPrompt, action: "ACCEPT" | "DECLINE" | "ANSWER") {
+    if (!token || !chatId || connectionBusy || (action === "ANSWER" && !promptAnswer.trim())) return;
+    try {
+      setConnectionBusy(true); setConnectionNotice(null);
+      await respondToConversationPrompt(token, chatId, prompt.id, action, action === "ANSWER" ? promptAnswer.trim() : undefined);
+      setPromptAnswer(""); await refreshConnection();
+      if (action === "DECLINE") setConnectionNotice("No problem — the question was passed without sharing an answer.");
+    } catch (error: any) { setConnectionNotice(error?.response?.data?.message ?? "Could not update this shared question."); }
+    finally { setConnectionBusy(false); }
+  }
+
   function reportMessage(message: Message) {
     if (!token || message.senderId === user?.id || message.isUnavailable) return;
     setReportNotice(null);
@@ -379,6 +419,18 @@ export default function ChatScreen() {
             animated: true,
           })
         }
+        ListHeaderComponent={isDirect && connection ? <View style={[styles.connectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.connectionEyebrow, { color: colors.teal }]}>PRIVATE FRIENDSHIP</Text>
+          <Text style={[styles.connectionTitle, { color: colors.navy }]}>{connection.levelLabel}</Text>
+          <Text style={[styles.connectionCopy, { color: colors.muted }]}>This connection grows only when both people choose it.</Text>
+          {connection.pendingLevel && <View style={[styles.connectionCallout, { backgroundColor: colors.tealSoft }]}><Text style={[styles.connectionCopy, { color: colors.text }]}>{connection.requestedByMe ? `You asked to become ${connection.nextLevelLabel ?? connection.pendingLevel}.` : `Your chat partner would like to become ${connection.nextLevelLabel ?? connection.pendingLevel}s.`}</Text>{connection.canAcceptLevel && <TouchableOpacity disabled={connectionBusy} onPress={() => changeFriendship("ACCEPT")} style={[styles.connectionButton, { backgroundColor: colors.teal }]}><Text style={styles.connectionButtonText}>{connectionBusy ? "Saving…" : "Accept together"}</Text></TouchableOpacity>}</View>}
+          {!connection.pendingLevel && connection.canRequestLevel && <TouchableOpacity disabled={connectionBusy} onPress={() => changeFriendship("REQUEST")} style={[styles.connectionButton, { backgroundColor: colors.teal }]}><Text style={styles.connectionButtonText}>{connectionBusy ? "Saving…" : `Ask to become ${connection.nextLevelLabel}s`}</Text></TouchableOpacity>}
+          {connection.prompt?.status === "OFFERED" && <View style={[styles.promptCard, { borderColor: colors.border }]}><Text style={[styles.promptLabel, { color: colors.teal }]}>OPTIONAL SHARED QUESTION · {connection.prompt.targetLabel.toUpperCase()}</Text><Text style={[styles.promptQuestion, { color: colors.text }]}>{connection.prompt.question}</Text><Text style={[styles.connectionCopy, { color: colors.muted }]}>Answer only if you both want to. Nothing is revealed until both agree.</Text>{!connection.prompt.hasAnswered && <View style={styles.promptActions}><TouchableOpacity disabled={connectionBusy} onPress={() => respondToPrompt(connection.prompt!, "DECLINE")} style={[styles.promptPass, { borderColor: colors.border }]}><Text style={[styles.promptPassText, { color: colors.muted }]}>Pass</Text></TouchableOpacity><TouchableOpacity disabled={connectionBusy} onPress={() => respondToPrompt(connection.prompt!, "ACCEPT")} style={[styles.connectionButton, { backgroundColor: colors.teal, flex: 1, marginTop: 0 }]}><Text style={styles.connectionButtonText}>{connectionBusy ? "Saving…" : "I'm in"}</Text></TouchableOpacity></View>}</View>}
+          {connection.prompt?.status === "ACTIVE" && <View style={[styles.promptCard, { borderColor: colors.border }]}><Text style={[styles.promptLabel, { color: colors.teal }]}>SHARED QUESTION · {connection.prompt.targetLabel.toUpperCase()}</Text><Text style={[styles.promptQuestion, { color: colors.text }]}>{connection.prompt.question}</Text>{connection.prompt.hasAnswered ? <Text style={[styles.connectionCopy, { color: colors.muted }]}>Your answer is safely held until they answer too.</Text> : <><TextInput value={promptAnswer} onChangeText={setPromptAnswer} maxLength={600} multiline placeholder="Write only what feels comfortable" placeholderTextColor={colors.muted} style={[styles.promptInput, { color: colors.text, borderColor: colors.border }]} /><TouchableOpacity disabled={connectionBusy || !promptAnswer.trim()} onPress={() => respondToPrompt(connection.prompt!, "ANSWER")} style={[styles.connectionButton, { backgroundColor: colors.teal }]}><Text style={styles.connectionButtonText}>{connectionBusy ? "Sharing…" : "Answer privately"}</Text></TouchableOpacity></>}</View>}
+          {connection.prompt?.status === "COMPLETED" && <View style={[styles.promptCard, { borderColor: colors.border }]}><Text style={[styles.promptLabel, { color: colors.teal }]}>SHARED ANSWERS · {connection.prompt.targetLabel.toUpperCase()}</Text><Text style={[styles.promptQuestion, { color: colors.text }]}>{connection.prompt.question}</Text><Text style={[styles.answerLabel, { color: colors.muted }]}>Your answer</Text><Text style={[styles.answerText, { color: colors.text }]}>{connection.prompt.myAnswer}</Text><Text style={[styles.answerLabel, { color: colors.muted }]}>Their answer</Text><Text style={[styles.answerText, { color: colors.text }]}>{connection.prompt.memberAnswer}</Text></View>}
+          {!connection.prompt && connection.canOfferPrompt && <TouchableOpacity disabled={connectionBusy} onPress={offerPrompt} style={[styles.promptInvite, { borderColor: colors.border }]}><Text style={[styles.promptLabel, { color: colors.teal }]}>CONVERSATION SPARK</Text><Text style={[styles.connectionCopy, { color: colors.muted }]}>Open an optional question one step beyond your current friendship level.</Text><Text style={[styles.promptInviteText, { color: colors.teal }]}>{connectionBusy ? "Opening…" : "Open a shared question"}</Text></TouchableOpacity>}
+          {!!connectionNotice && <Text style={[styles.connectionNotice, { color: connectionNotice.startsWith("Could") || connectionNotice.startsWith("Keep") ? colors.danger : colors.teal }]}>{connectionNotice}</Text>}
+        </View> : null}
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={styles.emoji}>👋</Text>
@@ -502,6 +554,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 7,
   },
+  connectionCard: { borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 16 }, connectionEyebrow: { fontSize: 10, fontWeight: "900", letterSpacing: 1.1 }, connectionTitle: { fontSize: 18, fontWeight: "900", marginTop: 4 }, connectionCopy: { fontSize: 12, lineHeight: 18, marginTop: 4 }, connectionCallout: { borderRadius: 12, padding: 11, marginTop: 12 }, connectionButton: { minHeight: 42, alignItems: "center", justifyContent: "center", borderRadius: 10, paddingHorizontal: 12, marginTop: 11 }, connectionButtonText: { color: "#FFF", fontWeight: "900", fontSize: 12 }, promptCard: { borderTopWidth: 1, marginTop: 13, paddingTop: 13 }, promptInvite: { borderWidth: 1, borderRadius: 12, padding: 12, marginTop: 13 }, promptInviteText: { fontWeight: "900", fontSize: 12, marginTop: 9 }, promptLabel: { fontSize: 10, fontWeight: "900", letterSpacing: .8 }, promptQuestion: { fontSize: 15, fontWeight: "800", lineHeight: 21, marginTop: 7 }, promptActions: { flexDirection: "row", gap: 8, marginTop: 12 }, promptPass: { minHeight: 42, minWidth: 80, borderWidth: 1, borderRadius: 10, alignItems: "center", justifyContent: "center" }, promptPassText: { fontWeight: "800", fontSize: 12 }, promptInput: { minHeight: 70, maxHeight: 130, borderWidth: 1, borderRadius: 10, padding: 10, marginTop: 12, textAlignVertical: "top", fontSize: 13 }, answerLabel: { fontWeight: "900", fontSize: 10, marginTop: 12 }, answerText: { fontSize: 13, lineHeight: 19, marginTop: 3 }, connectionNotice: { fontSize: 11, lineHeight: 16, fontWeight: "700", marginTop: 10 },
 
   ownMessageRow: {
     alignItems: "flex-end",
