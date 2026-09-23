@@ -13,7 +13,7 @@ const steps = [
   { icon: "☕", eyebrow: "WELCOME TO BREAKROOM", title: "Your quiet desk at work.", body: "Breakroom is a calm space to meet people, take short breaks, and share small workday moments." },
   { icon: "✈", eyebrow: "YOUR DESK", title: "Paper Planes start conversations.", body: "Write a short note and send a Paper Plane. A plane can land on someone’s desk for up to 24 hours. When they accept it, the chat moves to Inbox." },
   { icon: "▤", eyebrow: "DESK NOTES", title: "Share a small public thought.", body: "Pin a Desk Note for the community. People can applaud or comment. You can manage or remove your notes anytime from Account." },
-  { icon: "☕", eyebrow: "TAKE A BREAK", title: "Choose your kind of break.", body: "Join a Coffee Break Room for a short group chat, or open the Game Table for a quick Tic-Tac-Toe match." },
+  { icon: "⊞", eyebrow: "GAME TABLE", title: "Take a small screen break.", body: "Open the Game Table for a quick Tic-Tac-Toe match or a solo Tetris break." },
   { icon: "✓", eyebrow: "YOU’RE READY", title: "Keep it kind and in your control.", body: "Use Inbox for accepted conversations, customise your profile in Account, and block or report anything that does not belong here." },
 ];
 
