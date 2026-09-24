@@ -46,10 +46,33 @@ function RootNavigator() {
 
   useEffect(() => {
     if (!token) return;
-    const updatePresence = (state: string) => setSocketAppForeground(state === "active");
-    updatePresence(AppState.currentState);
-    const subscription = AppState.addEventListener("change", updatePresence);
-    return () => subscription.remove();
+    if (Platform.OS === "web") {
+      const updateBrowserPresence = () => {
+        setSocketAppForeground(document.visibilityState === "visible" && document.hasFocus());
+      };
+      updateBrowserPresence();
+      document.addEventListener("visibilitychange", updateBrowserPresence);
+      window.addEventListener("focus", updateBrowserPresence);
+      window.addEventListener("blur", updateBrowserPresence);
+      return () => {
+        document.removeEventListener("visibilitychange", updateBrowserPresence);
+        window.removeEventListener("focus", updateBrowserPresence);
+        window.removeEventListener("blur", updateBrowserPresence);
+      };
+    }
+
+    const updateAppPresence = (state: string) => setSocketAppForeground(state === "active");
+    const onAppFocus = () => setSocketAppForeground(true);
+    const onAppBlur = () => setSocketAppForeground(false);
+    updateAppPresence(AppState.currentState);
+    const stateSubscription = AppState.addEventListener("change", updateAppPresence);
+    const focusSubscription = Platform.OS === "android" ? AppState.addEventListener("focus", onAppFocus) : null;
+    const blurSubscription = Platform.OS === "android" ? AppState.addEventListener("blur", onAppBlur) : null;
+    return () => {
+      stateSubscription.remove();
+      focusSubscription?.remove();
+      blurSubscription?.remove();
+    };
   }, [token]);
 
   useEffect(() => {
