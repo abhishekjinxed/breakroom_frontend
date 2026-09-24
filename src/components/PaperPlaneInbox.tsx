@@ -8,6 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { getSocket } from "../services/socket";
 import { PublicAvatar, PublicFlair } from "./PublicIdentity";
+import { reportContent } from "../api/safety";
 
 const positions = [
   { left: 18, top: 12, rotate: "-16deg" }, { left: 122, top: 4, rotate: "9deg" },
@@ -23,6 +24,8 @@ export function DeskPlanes() {
   const [selected, setSelected] = useState<PaperPlaneInvite | null>(null);
   const [responding, setResponding] = useState(false);
   const [responseError, setResponseError] = useState<string | null>(null);
+  const [reportNotice, setReportNotice] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -58,12 +61,23 @@ export function DeskPlanes() {
     } finally { setResponding(false); }
   }
 
+  async function reportPlane() {
+    if (!token || !selected || reporting || reportNotice?.startsWith("Reported")) return;
+    try {
+      setReporting(true);
+      await reportContent(token, "PAPER_PLANE", selected.id, "Inappropriate Paper Plane message");
+      setReportNotice("Reported. A moderator will review this plane.");
+    } catch {
+      setReportNotice("Couldn’t report this plane. Please try again.");
+    } finally { setReporting(false); }
+  }
+
   const snippet = selected?.message ? `${selected.message.slice(0, 120)}${selected.message.length > 120 ? "…" : ""}` : "";
   return <>
     <View style={styles.tray} pointerEvents="box-none">
       {invites.slice(0, positions.length).map((invite, index) => {
         const position = positions[index];
-        return <FlyingPlane key={invite.id} invite={invite} position={position} onOpen={() => setSelected(invite)} />;
+        return <FlyingPlane key={invite.id} invite={invite} position={position} onOpen={() => { setReportNotice(null); setResponseError(null); setSelected(invite); }} />;
       })}
       {invites.length > 0 && <View style={styles.count}><Text style={styles.countText}>{invites.length} {invites.length === 1 ? "plane landed" : "planes landed"}</Text></View>}
     </View>
@@ -74,6 +88,8 @@ export function DeskPlanes() {
         <Text style={styles.note}>“{snippet}”</Text>
         <Text style={styles.hint}>{selected?.isCharter ? "This red plane was sent directly to your desk." : t("planeHint")}</Text>
         {responseError && <Text style={styles.error}>{responseError}</Text>}
+        {reportNotice && <Text style={styles.error}>{reportNotice}</Text>}
+        {!responding && <TouchableOpacity disabled={reporting || !!reportNotice?.startsWith("Reported")} onPress={reportPlane} style={styles.reportPlane}><Text style={styles.reportPlaneText}>{reporting ? "Reporting…" : reportNotice?.startsWith("Reported") ? "Reported" : "Report this plane"}</Text></TouchableOpacity>}
         {responding ? <ActivityIndicator color={Brand.colors.teal} style={styles.loader} /> : <View style={styles.actions}>
           <TouchableOpacity style={styles.decline} onPress={() => respond(false)}><Text style={styles.declineText}>{t("letItPass")}</Text></TouchableOpacity>
           <TouchableOpacity style={styles.accept} onPress={() => respond(true)}><Text style={styles.acceptText}>{t("acceptPlane")}</Text></TouchableOpacity>
@@ -102,5 +118,5 @@ const styles = StyleSheet.create({
   planeMark: { fontSize: 31, color: "#9A5A32", lineHeight: 34 }, seal: { position: "absolute", right: 5, bottom: 3, height: 14, minWidth: 14, borderRadius: 7, backgroundColor: "#6E3B2A", color: "#FFF8ED", fontSize: 8, fontWeight: "900", textAlign: "center", lineHeight: 14, overflow: "hidden" },
   charterPlane: { backgroundColor: "#FFE0D9", borderColor: "#B8443F" }, charterPlaneMark: { color: "#B8443F" }, charterSeal: { backgroundColor: "#B8443F" }, charterEyebrow: { color: "#B8443F" },
   count: { position: "absolute", left: 18, bottom: 0, backgroundColor: "rgba(62, 40, 30, .82)", borderRadius: 10, paddingHorizontal: 9, paddingVertical: 5 }, countText: { color: "#FFF7E8", fontSize: 10, fontWeight: "900" },
-  backdrop: { flex: 1, justifyContent: "center", padding: 24, backgroundColor: "rgba(55, 34, 22, .62)" }, letter: { backgroundColor: "#FFF8ED", borderRadius: 24, padding: 23, alignItems: "center" }, letterPlane: { color: "#9A5A32", fontSize: 42, transform: [{ rotate: "-12deg" }] }, eyebrow: { color: "#9A5A32", fontSize: 10, letterSpacing: 1.2, fontWeight: "900", marginTop: 5 }, senderIdentity: { flexDirection: "row", alignItems: "center", gap: 9, marginTop: 12, alignSelf: "center" }, fromLabel: { color: "#806657", fontSize: 10, fontWeight: "800", textTransform: "uppercase", letterSpacing: .6 }, note: { color: "#543A2D", backgroundColor: "#F4E5D2", borderRadius: 14, padding: 14, width: "100%", textAlign: "center", fontSize: 14, lineHeight: 20, marginTop: 15 }, hint: { color: "#806657", textAlign: "center", fontSize: 12, lineHeight: 18, marginTop: 10 }, error: { color: "#B54D43", textAlign: "center", fontSize: 12, lineHeight: 17, marginTop: 10, fontWeight: "700" }, actions: { flexDirection: "row", width: "100%", gap: 10, marginTop: 20 }, decline: { flex: 1, borderWidth: 1, borderColor: Brand.colors.border, borderRadius: 12, minHeight: 48, alignItems: "center", justifyContent: "center" }, declineText: { color: Brand.colors.navyMuted, fontWeight: "800" }, accept: { flex: 1, backgroundColor: Brand.colors.navy, borderRadius: 12, minHeight: 48, alignItems: "center", justifyContent: "center" }, acceptText: { color: "#FFF", fontWeight: "800" }, loader: { marginTop: 24 }, close: { marginTop: 15, padding: 6 }, closeText: { color: "#806657", fontWeight: "800", fontSize: 12 },
+  backdrop: { flex: 1, justifyContent: "center", padding: 24, backgroundColor: "rgba(55, 34, 22, .62)" }, letter: { backgroundColor: "#FFF8ED", borderRadius: 24, padding: 23, alignItems: "center" }, letterPlane: { color: "#9A5A32", fontSize: 42, transform: [{ rotate: "-12deg" }] }, eyebrow: { color: "#9A5A32", fontSize: 10, letterSpacing: 1.2, fontWeight: "900", marginTop: 5 }, senderIdentity: { flexDirection: "row", alignItems: "center", gap: 9, marginTop: 12, alignSelf: "center" }, fromLabel: { color: "#806657", fontSize: 10, fontWeight: "800", textTransform: "uppercase", letterSpacing: .6 }, note: { color: "#543A2D", backgroundColor: "#F4E5D2", borderRadius: 14, padding: 14, width: "100%", textAlign: "center", fontSize: 14, lineHeight: 20, marginTop: 15 }, hint: { color: "#806657", textAlign: "center", fontSize: 12, lineHeight: 18, marginTop: 10 }, error: { color: "#B54D43", textAlign: "center", fontSize: 12, lineHeight: 17, marginTop: 10, fontWeight: "700" }, actions: { flexDirection: "row", width: "100%", gap: 10, marginTop: 20 }, decline: { flex: 1, borderWidth: 1, borderColor: Brand.colors.border, borderRadius: 12, minHeight: 48, alignItems: "center", justifyContent: "center" }, declineText: { color: Brand.colors.navyMuted, fontWeight: "800" }, accept: { flex: 1, backgroundColor: Brand.colors.navy, borderRadius: 12, minHeight: 48, alignItems: "center", justifyContent: "center" }, acceptText: { color: "#FFF", fontWeight: "800" }, loader: { marginTop: 24 }, close: { marginTop: 15, padding: 6 }, closeText: { color: "#806657", fontWeight: "800", fontSize: 12 }, reportPlane: { padding: 10, marginTop: 6 }, reportPlaneText: { color: "#B54D43", fontSize: 12, fontWeight: "900" },
 });

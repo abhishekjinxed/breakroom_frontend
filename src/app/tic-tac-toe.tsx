@@ -35,7 +35,7 @@ export default function TicTacToeScreen() {
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
     if (!game || !["WAITING", "ACTIVE"].includes(game.status)) return;
-    const interval = setInterval(() => load(true), 2000);
+    const interval = setInterval(() => load(true), 5000);
     return () => clearInterval(interval);
   }, [game?.id, game?.status, load]);
 
